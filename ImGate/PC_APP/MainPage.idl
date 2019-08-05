@@ -1,9 +1,28 @@
 namespace PC_APP
 {
+	enum NotifyType
+	{
+		StatusMessage,
+		ErrorMessage
+	};
+
+	struct Scenario
+	{
+		String Title;
+		Windows.UI.Xaml.Interop.TypeName ClassName;
+	};
+
     [default_interface]
-    runtimeclass MainPage : Windows.UI.Xaml.Controls.Page
-    {
-        MainPage();
-        Int32 MyProperty;
-    }
+	runtimeclass MainPage : Windows.UI.Xaml.Controls.Page
+	{
+		MainPage();
+
+		static String FEATURE_NAME{ get; };
+		static Windows.Foundation.Collections.IVector<Scenario> scenarios{ get; };
+
+		static MainPage Current{ get; };
+
+		void NotifyUser(String strMessage, NotifyType type);
+		void Navigate(Windows.UI.Xaml.Interop.TypeName name, Object parameter);
+	};
 }

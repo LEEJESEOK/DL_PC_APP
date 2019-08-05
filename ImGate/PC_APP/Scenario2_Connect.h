@@ -21,6 +21,8 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget ValueChangedSubscribeToggle_Click();
 
 	private:
+		bool isConnect = false;
+
 		PC_APP::MainPage rootPage{ MainPage::Current() };
 		Windows::Devices::Bluetooth::BluetoothLEDevice bluetoothLeDevice{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic selectedCharacteristic{ nullptr };

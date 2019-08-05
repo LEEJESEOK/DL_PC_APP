@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 
 #include "App.h"
+#include "SampleConfiguration.h"
 #include "MainPage.h"
 
 using namespace winrt;
@@ -13,25 +14,39 @@ using namespace Windows::UI::Xaml::Navigation;
 using namespace PC_APP;
 using namespace PC_APP::implementation;
 
+// These placeholder functions are used if the sample does not
+// implement the corresponding methods. This allows us to simulate
+// C# partial methods in C++.
+
+namespace
+{
+	[[maybe_unused]] void App_Construct(App*) { }
+	[[maybe_unused]] bool App_OverrideOnLaunched(LaunchActivatedEventArgs const&) { return false; }
+	[[maybe_unused]] void App_LaunchCompleted(LaunchActivatedEventArgs const&) { }
+	[[maybe_unused]] void App_OnActivated(IActivatedEventArgs const&) { }
+	[[maybe_unused]] void App_OnFileActivated(FileActivatedEventArgs const&) { }
+}
+
 /// <summary>
 /// Initializes the singleton application object.  This is the first line of authored code
 /// executed, and as such is the logical equivalent of main() or WinMain().
 /// </summary>
 App::App()
 {
-    InitializeComponent();
-    Suspending({ this, &App::OnSuspending });
+	InitializeComponent();
 
 #if defined _DEBUG && !defined DISABLE_XAML_GENERATED_BREAK_ON_UNHANDLED_EXCEPTION
-    UnhandledException([this](IInspectable const&, UnhandledExceptionEventArgs const& e)
-    {
-        if (IsDebuggerPresent())
-        {
-            auto errorMessage = e.Message();
-            __debugbreak();
-        }
-    });
+	UnhandledException([this](IInspectable const&, UnhandledExceptionEventArgs const& e)
+	{
+		if (IsDebuggerPresent())
+		{
+			auto errorMessage = e.Message();
+			__debugbreak();
+		}
+	});
 #endif
+
+	App_Construct(this);
 }
 
 /// <summary>
@@ -41,71 +56,64 @@ App::App()
 /// <param name="e">Details about the launch request and process.</param>
 void App::OnLaunched(LaunchActivatedEventArgs const& e)
 {
-    Frame rootFrame{ nullptr };
-    auto content = Window::Current().Content();
-    if (content)
-    {
-        rootFrame = content.try_as<Frame>();
-    }
+	// Samples have an opportunity to take over OnLaunched.
+	if (App_OverrideOnLaunched(e))
+	{
+		return;
+	}
 
-    // Do not repeat app initialization when the Window already has content,
-    // just ensure that the window is active
-    if (rootFrame == nullptr)
-    {
-        // Create a Frame to act as the navigation context and associate it with
-        // a SuspensionManager key
-        rootFrame = Frame();
+	Frame rootFrame = CreateRootFrame();
+	if (rootFrame.Content() == nullptr)
+	{
+		// When the navigation stack isn't restored navigate to the first page,
+		// configuring the new page by passing required information as a navigation
+		// parameter
+		rootFrame.Navigate(xaml_typename<PC_APP::MainPage>(), box_value(e.Arguments()));
+	}
 
-        rootFrame.NavigationFailed({ this, &App::OnNavigationFailed });
+	// Ensure the current window is active
+	Window::Current().Activate();
 
-        if (e.PreviousExecutionState() == ApplicationExecutionState::Terminated)
-        {
-            // Restore the saved session state only when appropriate, scheduling the
-            // final launch steps after the restore is complete
-        }
-
-        if (e.PrelaunchActivated() == false)
-        {
-            if (rootFrame.Content() == nullptr)
-            {
-                // When the navigation stack isn't restored navigate to the first page,
-                // configuring the new page by passing required information as a navigation
-                // parameter
-                rootFrame.Navigate(xaml_typename<PC_APP::MainPage>(), box_value(e.Arguments()));
-            }
-            // Place the frame in the current Window
-            Window::Current().Content(rootFrame);
-            // Ensure the current window is active
-            Window::Current().Activate();
-        }
-    }
-    else
-    {
-        if (e.PrelaunchActivated() == false)
-        {
-            if (rootFrame.Content() == nullptr)
-            {
-                // When the navigation stack isn't restored navigate to the first page,
-                // configuring the new page by passing required information as a navigation
-                // parameter
-                rootFrame.Navigate(xaml_typename<PC_APP::MainPage>(), box_value(e.Arguments()));
-            }
-            // Ensure the current window is active
-            Window::Current().Activate();
-        }
-    }
+	// Some samples want access to the LaunchActivatedEventArgs after the launch is done.
+	App_LaunchCompleted(e);
 }
 
-/// <summary>
-/// Invoked when application execution is being suspended.  Application state is saved
-/// without knowing whether the application will be terminated or resumed with the contents
-/// of memory still intact.
-/// </summary>
-/// <param name="sender">The source of the suspend request.</param>
-/// <param name="e">Details about the suspend request.</param>
-void App::OnSuspending([[maybe_unused]] IInspectable const& sender, [[maybe_unused]] SuspendingEventArgs const& e)
+Frame App::CreateRootFrame()
 {
-    // Save application state and stop any background activity
+	Frame rootFrame{ nullptr };
+	auto content = Window::Current().Content();
+	if (content)
+	{
+		rootFrame = content.try_as<Frame>();
+	}
+
+	// Do not repeat app initialization when the Window already has content,
+	// just ensure that the window is active
+	if (rootFrame == nullptr)
+	{
+		// Create a Frame to act as the navigation context and associate it with
+		// a SuspensionManager key
+		rootFrame = Frame();
+
+		rootFrame.NavigationFailed({ this, &App::OnNavigationFailed });
+
+		// Place the frame in the current Window
+		Window::Current().Content(rootFrame);
+	}
+
+	return rootFrame;
+}
+
+// Some samples want to handle certain activations.
+void App::OnActivated(IActivatedEventArgs const& e)
+{
+	App_OnActivated(e);
+}
+
+// Some samples want to handle file activations.
+void App::OnFileActivated(FileActivatedEventArgs const& e)
+{
+	App_OnFileActivated(e);
 }
 
 /// <summary>
@@ -115,5 +123,5 @@ void App::OnSuspending([[maybe_unused]] IInspectable const& sender, [[maybe_unus
 /// <param name="e">Details about the navigation failure</param>
 void App::OnNavigationFailed(IInspectable const&, NavigationFailedEventArgs const& e)
 {
-    throw hresult_error(E_FAIL, hstring(L"Failed to load Page ") + e.SourcePageType().Name);
+	throw hresult_error(E_FAIL, hstring(L"Failed to load Page ") + e.SourcePageType().Name);
 }

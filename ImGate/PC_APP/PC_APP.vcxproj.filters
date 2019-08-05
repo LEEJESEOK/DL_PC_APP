@@ -5,19 +5,30 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="MainPage.xaml" />
+    <Page Include="Styles.xaml" />
+    <Page Include="Scenario1_Discovery.xaml" />
+    <Page Include="Scenario2_Connect.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="App.idl" />
     <Midl Include="MainPage.idl" />
+    <Midl Include="project.idl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="App.cpp" />
     <ClCompile Include="MainPage.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="SampleConfiguration.cpp" />
+    <ClCompile Include="BluetoothLEDeviceDisplay.cpp" />
+    <ClCompile Include="BluetoothLEAttributeDisplay.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="SampleConfiguration.h" />
+    <ClInclude Include="PresentationFormats.h" />
+    <ClInclude Include="BluetoothLEAttributeDisplay.h" />
+    <ClInclude Include="BluetoothLEDeviceDisplay.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Wide310x150Logo.scale-200.png">

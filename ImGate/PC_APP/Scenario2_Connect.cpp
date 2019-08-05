@@ -160,9 +160,6 @@ namespace winrt::PC_APP::implementation
 	fire_and_forget Scenario2_Connect::ConnectButton_Click()
 	{
 		auto lifetime = get_strong();
-
-		ConnectButton().IsEnabled(false);
-
 		if (!co_await ClearBluetoothLEDeviceAsync())
 		{
 			rootPage.NotifyUser(L"Error: Unable to reset state, try again.", NotifyType::ErrorMessage);
@@ -194,6 +191,8 @@ namespace winrt::PC_APP::implementation
 
 		if (bluetoothLeDevice != nullptr)
 		{
+			isConnect = true;
+
 			// Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
 			// BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
 			// If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
@@ -617,7 +616,8 @@ namespace winrt::PC_APP::implementation
 					return L"Unknown format";
 				}
 			}
-		} else
+		}
+		else
 		{
 			return L"Empty data received";
 		}
