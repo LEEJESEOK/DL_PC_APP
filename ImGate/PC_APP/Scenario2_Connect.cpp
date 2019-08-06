@@ -227,6 +227,8 @@ namespace winrt::PC_APP::implementation
 
 		auto selectedItem = ServiceList().SelectedItem().as<ComboBoxItem>();
 		GattDeviceService service = selectedItem ? selectedItem.Tag().as<GattDeviceService>() : nullptr;
+		
+		CharacteristicPanel().Visibility(Visibility::Collapsed);
 
 		CharacteristicList().Items().Clear();
 		RemoveValueChangedHandler();
@@ -275,15 +277,18 @@ namespace winrt::PC_APP::implementation
 			}
 		}
 
+
+		CharacteristicPanel().Visibility(Visibility::Visible);
 		// service uuid가 Nordic UART(0x0001) 일 때 테스트
 		if (DisplayHelpers::GetServiceName(service) == L"Nordic UART") {
 			CharacteristicList().Visibility(Visibility::Collapsed);
-			DoorlockTestPanel().Visibility(Visibility::Visible);
+			NUSControlPanel().Visibility(Visibility::Visible);
+
 
 		}
 		else {
 			CharacteristicList().Visibility(Visibility::Visible);
-			DoorlockTestPanel().Visibility(Visibility::Collapsed);
+			NUSControlPanel().Visibility(Visibility::Collapsed);
 		}
 	}
 #pragma endregion
@@ -520,9 +525,24 @@ namespace winrt::PC_APP::implementation
 		}
 	}
 
+	//TODO Lock 동작 추가
+	void Scenario2_Connect::LockButton_Click()
+	{
+		rootPage.NotifyUser(L"LockButton_Click", NotifyType::StatusMessage);
+
+	}
+
+	//TODO Unlock
+	void Scenario2_Connect::UnlockButton_Click()
+	{
+		rootPage.NotifyUser(L"UnlockButton_Click", NotifyType::StatusMessage);
+
+	}
+
 	//TODO test 동작 추가
 	void Scenario2_Connect::TestButton_Click()
 	{
+		rootPage.NotifyUser(L"TestButton_Click", NotifyType::StatusMessage);
 
 	}
 
