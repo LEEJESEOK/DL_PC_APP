@@ -523,7 +523,7 @@ namespace winrt::PC_APP::implementation
 	//TODO test 동작 추가
 	void Scenario2_Connect::TestButton_Click()
 	{
-
+		//test
 	}
 
 	fire_and_forget Scenario2_Connect::Characteristic_ValueChanged(GattCharacteristic const&, GattValueChangedEventArgs args)
