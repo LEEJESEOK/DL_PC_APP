@@ -264,8 +264,6 @@ namespace winrt::PC_APP::implementation
 			rootPage.NotifyUser(L"Restricted service. Can't read characteristics: " + ex.message(), NotifyType::ErrorMessage);
 		}
 
-		//TODO NUS code
-
 		if (characteristics)
 		{
 			for (GattCharacteristic&& c : characteristics)
@@ -573,7 +571,7 @@ namespace winrt::PC_APP::implementation
 		rootPage.NotifyUser(L"LockButton_Click", NotifyType::StatusMessage);
 
 		auto lifetime = get_strong();
-		
+
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
