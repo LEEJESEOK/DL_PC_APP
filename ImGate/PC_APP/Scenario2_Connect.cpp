@@ -287,6 +287,38 @@ namespace winrt::PC_APP::implementation
 			CharacteristicList().Visibility(Visibility::Collapsed);
 			NUSControlPanel().Visibility(Visibility::Visible);
 
+			GattClientCharacteristicConfigurationDescriptorValue cccdValue = GattClientCharacteristicConfigurationDescriptorValue::None;
+			if ((nordicUARTNotify.CharacteristicProperties() & GattCharacteristicProperties::Indicate) != GattCharacteristicProperties::None)
+			{
+				cccdValue = GattClientCharacteristicConfigurationDescriptorValue::Indicate;
+			}
+
+			else if ((nordicUARTNotify.CharacteristicProperties() & GattCharacteristicProperties::Notify) != GattCharacteristicProperties::None)
+			{
+				cccdValue = GattClientCharacteristicConfigurationDescriptorValue::Notify;
+			}
+
+			try
+			{
+				// BT_Code: Must write the CCCD in order for server to send indications.
+				// We receive them in the ValueChanged event handler.
+				GattCommunicationStatus status = co_await nordicUARTNotify.WriteClientCharacteristicConfigurationDescriptorAsync(cccdValue);
+
+				if (status == GattCommunicationStatus::Success)
+				{
+					AddUartChangedHandler();
+					rootPage.NotifyUser(L"Successfully subscribed for value changes", NotifyType::StatusMessage);
+				}
+				else
+				{
+					rootPage.NotifyUser(L"Error registering for value changes: Status = " + to_hstring(status), NotifyType::ErrorMessage);
+				}
+			}
+			catch (hresult_access_denied& ex)
+			{
+				// This usually happens when a device reports that it support indicate, but it actually doesn't.
+				rootPage.NotifyUser(ex.message(), NotifyType::ErrorMessage);
+			}
 
 		}
 		else {
@@ -312,6 +344,15 @@ namespace winrt::PC_APP::implementation
 		{
 			registeredCharacteristic.ValueChanged(std::exchange(notificationsToken, {}));
 			registeredCharacteristic = nullptr;
+		}
+	}
+	void Scenario2_Connect::AddUartChangedHandler()
+	{
+		ValueChangedSubscribeToggle().Content(box_value(L"Unsubscribe from value changes"));
+		if (!notificationsToken)
+		{
+			registeredCharacteristic = nordicUARTNotify;
+			notificationsToken = registeredCharacteristic.ValueChanged({ get_weak(), &Scenario2_Connect::Characteristic_ValueChanged });
 		}
 	}
 
@@ -680,7 +721,7 @@ namespace winrt::PC_APP::implementation
 		else if (buffer != nullptr)
 		{
 			// We don't know what format to use. Let's try some well-known profiles, or default back to UTF-8.
-			if (selectedCharacteristic.Uuid() == GattCharacteristicUuids::HeartRateMeasurement())
+			if (selectedCharacteristic != nullptr && selectedCharacteristic.Uuid() == GattCharacteristicUuids::HeartRateMeasurement())
 			{
 				try
 				{
@@ -691,7 +732,7 @@ namespace winrt::PC_APP::implementation
 					return L"Heart Rate: (unable to parse)";
 				}
 			}
-			else if (selectedCharacteristic.Uuid() == GattCharacteristicUuids::BatteryLevel())
+			else if (selectedCharacteristic != nullptr && selectedCharacteristic.Uuid() == GattCharacteristicUuids::BatteryLevel())
 			{
 				// battery level is encoded as a percentage value in the first byte according to
 				// https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.battery_level.xml

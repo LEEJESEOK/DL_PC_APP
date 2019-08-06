@@ -42,6 +42,7 @@ namespace winrt::PC_APP::implementation
 		Windows::Foundation::IAsyncOperation<bool> ClearBluetoothLEDeviceAsync();
 		void AddValueChangedHandler();
 		void RemoveValueChangedHandler();
+		void AddUartChangedHandler();
 		void EnableCharacteristicPanels(Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristicProperties properties);
 		Windows::Foundation::IAsyncOperation<bool> WriteBufferToSelectedCharacteristicAsync(Windows::Storage::Streams::IBuffer buffer);
 		Windows::Foundation::IAsyncOperation<bool> WriteBufferToNordicUARTAsync(Windows::Storage::Streams::IBuffer buffer);
