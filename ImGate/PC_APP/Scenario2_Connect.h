@@ -22,7 +22,7 @@ namespace winrt::PC_APP::implementation
 
 		fire_and_forget LockButton_Click();
 		fire_and_forget UnlockButton_Click();
-		void TestButton_Click();
+		fire_and_forget TestButton_Click();
 
 	private:
 		bool isConnect = false;
