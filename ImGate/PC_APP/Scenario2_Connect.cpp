@@ -262,6 +262,8 @@ namespace winrt::PC_APP::implementation
 			rootPage.NotifyUser(L"Restricted service. Can't read characteristics: " + ex.message(), NotifyType::ErrorMessage);
 		}
 
+		//TODO NUS code
+
 		if (characteristics)
 		{
 			for (GattCharacteristic&& c : characteristics)
@@ -272,7 +274,17 @@ namespace winrt::PC_APP::implementation
 				CharacteristicList().Items().Append(item);
 			}
 		}
-		CharacteristicList().Visibility(Visibility::Visible);
+
+		// service uuid가 Nordic UART(0x0001) 일 때 테스트
+		if (DisplayHelpers::GetServiceName(service) == L"Nordic UART") {
+			CharacteristicList().Visibility(Visibility::Collapsed);
+			DoorlockTestPanel().Visibility(Visibility::Visible);
+
+		}
+		else {
+			CharacteristicList().Visibility(Visibility::Visible);
+			DoorlockTestPanel().Visibility(Visibility::Collapsed);
+		}
 	}
 #pragma endregion
 
@@ -508,6 +520,12 @@ namespace winrt::PC_APP::implementation
 		}
 	}
 
+	//TODO test 동작 추가
+	void Scenario2_Connect::TestButton_Click()
+	{
+
+	}
+
 	fire_and_forget Scenario2_Connect::Characteristic_ValueChanged(GattCharacteristic const&, GattValueChangedEventArgs args)
 	{
 		auto lifetime = get_strong();
@@ -621,6 +639,5 @@ namespace winrt::PC_APP::implementation
 		{
 			return L"Empty data received";
 		}
-		return L"Unknown format";
 	}
 }

@@ -20,6 +20,8 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget CharacteristicWriteButtonInt_Click();
 		fire_and_forget ValueChangedSubscribeToggle_Click();
 
+		void TestButton_Click();
+
 	private:
 		bool isConnect = false;
 

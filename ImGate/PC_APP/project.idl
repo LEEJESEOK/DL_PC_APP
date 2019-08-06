@@ -24,6 +24,8 @@ namespace PC_APP
 		void CharacteristicWriteButton_Click();
 		void CharacteristicWriteButtonInt_Click();
 		void ValueChangedSubscribeToggle_Click();
+
+		void TestButton_Click();
 	};
 
 	/// <summary>
