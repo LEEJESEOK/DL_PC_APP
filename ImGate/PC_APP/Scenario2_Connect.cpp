@@ -227,7 +227,7 @@ namespace winrt::PC_APP::implementation
 
 		auto selectedItem = ServiceList().SelectedItem().as<ComboBoxItem>();
 		GattDeviceService service = selectedItem ? selectedItem.Tag().as<GattDeviceService>() : nullptr;
-		
+
 		CharacteristicPanel().Visibility(Visibility::Collapsed);
 
 		CharacteristicList().Items().Clear();
@@ -274,6 +274,11 @@ namespace winrt::PC_APP::implementation
 				item.Content(box_value(DisplayHelpers::GetCharacteristicName(c)));
 				item.Tag(c);
 				CharacteristicList().Items().Append(item);
+
+				if (DisplayHelpers::GetCharacteristicName(c) == L"RX Characteristic")
+					nordicUARTWrite = item.Tag().as<GattCharacteristic>();
+				if (DisplayHelpers::GetCharacteristicName(c) == L"TX Characteristic")
+					nordicUARTNotify = item.Tag().as<GattCharacteristic>();
 			}
 		}
 
@@ -458,6 +463,43 @@ namespace winrt::PC_APP::implementation
 		}
 	}
 
+	IAsyncOperation<bool> Scenario2_Connect::WriteBufferToNordicUARTAsync(IBuffer buffer)
+	{
+		auto lifetime = get_strong();
+
+		try
+		{
+			// BT_Code: Writes the value from the buffer to the characteristic.
+			GattWriteResult result = co_await nordicUARTWrite.WriteValueWithResultAsync(buffer);
+
+			if (result.Status() == GattCommunicationStatus::Success)
+			{
+				rootPage.NotifyUser(L"Successfully wrote value to device", NotifyType::StatusMessage);
+				co_return true;
+			}
+			else
+			{
+				rootPage.NotifyUser(L"Write failed: Status = " + to_hstring(result.Status()), NotifyType::ErrorMessage);
+				co_return false;
+			}
+		}
+		catch (hresult_error& ex)
+		{
+			if (ex.code() == E_BLUETOOTH_ATT_INVALID_PDU)
+			{
+				rootPage.NotifyUser(ex.message(), NotifyType::ErrorMessage);
+				co_return false;
+			}
+			if (ex.code() == E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED || ex.code() == E_ACCESSDENIED)
+			{
+				// This usually happens when a device reports that it support writing, but it actually doesn't.
+				rootPage.NotifyUser(ex.message(), NotifyType::ErrorMessage);
+				co_return false;
+			}
+			throw;
+		}
+	}
+
 	fire_and_forget Scenario2_Connect::ValueChangedSubscribeToggle_Click()
 	{
 		auto lifetime = get_strong();
@@ -526,16 +568,27 @@ namespace winrt::PC_APP::implementation
 	}
 
 	//TODO Lock 동작 추가
-	void Scenario2_Connect::LockButton_Click()
+	fire_and_forget Scenario2_Connect::LockButton_Click()
 	{
 		rootPage.NotifyUser(L"LockButton_Click", NotifyType::StatusMessage);
 
+		auto lifetime = get_strong();
+		
+		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
+
+		co_await WriteBufferToNordicUARTAsync(writeBuffer);
 	}
 
 	//TODO Unlock
-	void Scenario2_Connect::UnlockButton_Click()
+	fire_and_forget Scenario2_Connect::UnlockButton_Click()
 	{
 		rootPage.NotifyUser(L"UnlockButton_Click", NotifyType::StatusMessage);
+
+		auto lifetime = get_strong();
+
+		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
+
+		co_await WriteBufferToNordicUARTAsync(writeBuffer);
 
 	}
 

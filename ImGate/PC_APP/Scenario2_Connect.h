@@ -20,8 +20,8 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget CharacteristicWriteButtonInt_Click();
 		fire_and_forget ValueChangedSubscribeToggle_Click();
 
-		void LockButton_Click();
-		void UnlockButton_Click();
+		fire_and_forget LockButton_Click();
+		fire_and_forget UnlockButton_Click();
 		void TestButton_Click();
 
 	private:
@@ -30,6 +30,8 @@ namespace winrt::PC_APP::implementation
 		PC_APP::MainPage rootPage{ MainPage::Current() };
 		Windows::Devices::Bluetooth::BluetoothLEDevice bluetoothLeDevice{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic selectedCharacteristic{ nullptr };
+		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic nordicUARTWrite{ nullptr };
+		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic nordicUARTNotify{ nullptr };
 
 		// Only one registered characteristic at a time.
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic registeredCharacteristic{ nullptr };
@@ -42,6 +44,7 @@ namespace winrt::PC_APP::implementation
 		void RemoveValueChangedHandler();
 		void EnableCharacteristicPanels(Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristicProperties properties);
 		Windows::Foundation::IAsyncOperation<bool> WriteBufferToSelectedCharacteristicAsync(Windows::Storage::Streams::IBuffer buffer);
+		Windows::Foundation::IAsyncOperation<bool> WriteBufferToNordicUARTAsync(Windows::Storage::Streams::IBuffer buffer);
 		hstring FormatValueByPresentation(Windows::Storage::Streams::IBuffer const& buffer, Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat const& format);
 		fire_and_forget Characteristic_ValueChanged(Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic const&, Windows::Devices::Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs args);
     };
