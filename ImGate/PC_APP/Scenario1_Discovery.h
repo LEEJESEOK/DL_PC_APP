@@ -16,11 +16,15 @@ namespace winrt::PC_APP::implementation
 			return m_knownDevices;
 		}
 
-		void EnumerateButton_Click();
+		void ActionButton_Click();
+		void DisconnectButton_Click();
+
 		bool Not(bool value) { return !value; }
 
 	private:
 		PC_APP::MainPage rootPage{ MainPage::Current() };
+
+		//scenario1
 		Windows::Foundation::Collections::IObservableVector<Windows::Foundation::IInspectable> m_knownDevices = single_threaded_observable_vector<Windows::Foundation::IInspectable>();
 		std::vector<Windows::Devices::Enumeration::DeviceInformation> UnknownDevices;
 		Windows::Devices::Enumeration::DeviceWatcher deviceWatcher{ nullptr };
@@ -30,6 +34,16 @@ namespace winrt::PC_APP::implementation
 		event_token deviceWatcherEnumerationCompletedToken;
 		event_token deviceWatcherStoppedToken;
 
+		//scenario2
+		event_token notificationsToken;
+		bool isConnect = false;
+		Windows::Devices::Bluetooth::BluetoothLEDevice bluetoothLeDevice{ nullptr };
+		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic nordicUARTWrite{ nullptr };
+		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic nordicUARTNotify{ nullptr };
+		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic registeredCharacteristic{ nullptr };
+		Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat presentationFormat{ nullptr };
+
+		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
 		void StopBleDeviceWatcher();
 		std::tuple<PC_APP::BluetoothLEDeviceDisplay, uint32_t> FindBluetoothLEDeviceDisplay(hstring const& id);
@@ -40,7 +54,22 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget DeviceWatcher_Removed(Windows::Devices::Enumeration::DeviceWatcher sender, Windows::Devices::Enumeration::DeviceInformationUpdate deviceInfoUpdate);
 		fire_and_forget DeviceWatcher_EnumerationCompleted(Windows::Devices::Enumeration::DeviceWatcher sender, Windows::Foundation::IInspectable const&);
 		fire_and_forget DeviceWatcher_Stopped(Windows::Devices::Enumeration::DeviceWatcher sender, Windows::Foundation::IInspectable const&);
-    };
+
+		//scenario2 - connection
+		Windows::Foundation::IAsyncOperation<bool> ClearBluetoothLEDeviceAsync();
+		Windows::Foundation::IAsyncAction ConnectTestDevice();
+		void AddValueChangedHandler();
+		void RemoveValueChangedHandler();
+		fire_and_forget Characteristic_ValueChanged(Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic const&, Windows::Devices::Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs args);
+		Windows::Foundation::IAsyncOperation<bool> WriteBufferToNordicUARTAsync(Windows::Storage::Streams::IBuffer buffer);
+		hstring FormatValueByPresentation(Windows::Storage::Streams::IBuffer const& buffer, Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat const& format);
+
+		void Timer(const long timeSpan);
+
+		Windows::Foundation::IAsyncAction Lock();
+		Windows::Foundation::IAsyncAction Unlock();
+		fire_and_forget TestAction();
+	};
 }
 
 namespace winrt::PC_APP::factory_implementation

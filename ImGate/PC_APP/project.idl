@@ -8,7 +8,8 @@ namespace PC_APP
 		Windows.Foundation.Collections.IObservableVector<Object> KnownDevices{ get; };
 
 		Windows.UI.Xaml.Controls.ListView ResultsListView{ get; };
-		void EnumerateButton_Click();
+		void ActionButton_Click();
+		void DisconnectButton_Click();
 		Boolean Not(Boolean value);
 	};
 

@@ -627,8 +627,6 @@ namespace winrt::PC_APP::implementation
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
-
-		//TODO read result
 	}
 
 	fire_and_forget Scenario2_Connect::UnlockButton_Click()
@@ -640,11 +638,8 @@ namespace winrt::PC_APP::implementation
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
-
-		//TODO read result
 	}
 
-	//TODO test 동작 추가
 	fire_and_forget Scenario2_Connect::TestButton_Click()
 	{
 		rootPage.NotifyUser(L"TestButton_Click", NotifyType::StatusMessage);
@@ -654,8 +649,6 @@ namespace winrt::PC_APP::implementation
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"3", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
-
-		//TODO read result
 	}
 
 	fire_and_forget Scenario2_Connect::Characteristic_ValueChanged(GattCharacteristic const&, GattValueChangedEventArgs args)
