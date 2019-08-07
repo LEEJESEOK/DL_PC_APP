@@ -30,6 +30,9 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <StackPanel>
+            <Button x:Name="Action" Content="start"/>
+        </StackPanel>
         <StackPanel x:Name="header" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
             <Button x:Name="EnumerateButton" Content="Start enumerating" Click="{x:Bind EnumerateButton_Click}"/>
         </StackPanel>

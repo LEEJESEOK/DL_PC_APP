@@ -145,7 +145,8 @@ namespace winrt::PC_APP::implementation
 			}
 			else
 			{
-				selectedCharacteristic.ValueChanged(std::exchange(notificationsToken, {}));
+				if (selectedCharacteristic != nullptr)
+					selectedCharacteristic.ValueChanged(std::exchange(notificationsToken, {}));
 			}
 		}
 
@@ -273,6 +274,8 @@ namespace winrt::PC_APP::implementation
 				item.Tag(c);
 				CharacteristicList().Items().Append(item);
 
+				// service uuid가 Nordic UART일 때 selectedCharacteristic 대신  
+				// nordicUARTWrite, nordicUARTNotify 대신 사용
 				if (DisplayHelpers::GetCharacteristicName(c) == L"RX Characteristic")
 					nordicUARTWrite = item.Tag().as<GattCharacteristic>();
 				if (DisplayHelpers::GetCharacteristicName(c) == L"TX Characteristic")
@@ -280,9 +283,8 @@ namespace winrt::PC_APP::implementation
 			}
 		}
 
-
 		CharacteristicPanel().Visibility(Visibility::Visible);
-		// service uuid가 Nordic UART(0x0001) 일 때 테스트
+
 		if (DisplayHelpers::GetServiceName(service) == L"Nordic UART") {
 			CharacteristicList().Visibility(Visibility::Collapsed);
 			NUSControlPanel().Visibility(Visibility::Visible);
@@ -615,9 +617,8 @@ namespace winrt::PC_APP::implementation
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
-		
+
 		//TODO read result
-		nordicUARTNotify;
 	}
 
 	fire_and_forget Scenario2_Connect::UnlockButton_Click()
@@ -629,7 +630,7 @@ namespace winrt::PC_APP::implementation
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
-		
+
 		//TODO read result
 	}
 
