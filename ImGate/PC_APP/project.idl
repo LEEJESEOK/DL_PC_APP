@@ -28,6 +28,8 @@ namespace PC_APP
 		void LockButton_Click();
 		void UnlockButton_Click();
 		void TestButton_Click();
+
+		void DisConnectButton_Click();
 	};
 
 	/// <summary>

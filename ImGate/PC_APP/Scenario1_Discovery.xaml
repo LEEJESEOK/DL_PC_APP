@@ -32,6 +32,7 @@
         </Grid.RowDefinitions>
         <StackPanel>
             <Button x:Name="Action" Content="start"/>
+            <TextBlock Text="hello test world!!" x:Name="logtext" Margin="0,10,0,0"/>
         </StackPanel>
         <StackPanel x:Name="header" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
             <Button x:Name="EnumerateButton" Content="Start enumerating" Click="{x:Bind EnumerateButton_Click}"/>
@@ -40,7 +41,7 @@
                       BorderBrush="AntiqueWhite" BorderThickness="1">
             <ListView x:Name="ResultsListView"
                       ItemTemplate="{StaticResource ResultsListViewTemplate}"
-                      ItemsSource="{x:Bind KnownDevices, Mode=OneWay}"/>
+                      ItemsSource="{x:Bind KnownDevices, Mode=OneWay}" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Stretch" Width="738"/>
         </ScrollViewer>
     </Grid>
 </Page>

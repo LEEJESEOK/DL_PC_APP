@@ -24,6 +24,8 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget UnlockButton_Click();
 		fire_and_forget TestButton_Click();
 
+		void DisConnectButton_Click();
+
 	private:
 		bool isConnect = false;
 

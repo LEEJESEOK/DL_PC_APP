@@ -110,6 +110,10 @@ namespace winrt::PC_APP::implementation
 		// Start over with an empty collection.
 		m_knownDevices.Clear();
 
+		hstring tempString = logtext().Text() + L"\n";
+		hstring message = tempString + L"scan";
+		logtext().Text(message);
+
 		// Start the watcher. Active enumeration is limited to approximately 30 seconds.
 		// This limits power usage and reduces interference with other Bluetooth activities.
 		// To monitor for the presence of Bluetooth LE devices for an extended period,

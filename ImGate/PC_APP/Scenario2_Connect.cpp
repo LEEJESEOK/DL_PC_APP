@@ -211,6 +211,7 @@ namespace winrt::PC_APP::implementation
 					ServiceList().Items().Append(item);
 				}
 				ConnectButton().Visibility(Visibility::Collapsed);
+				DisConnectButton().Visibility(Visibility::Visible);
 				ServiceList().Visibility(Visibility::Visible);
 			}
 			else
@@ -221,6 +222,15 @@ namespace winrt::PC_APP::implementation
 		ConnectButton().IsEnabled(true);
 	}
 
+	void Scenario2_Connect::DisConnectButton_Click()
+	{
+		ClearBluetoothLEDeviceAsync();
+		ConnectButton().Visibility(Visibility::Visible);
+		DisConnectButton().Visibility(Visibility::Collapsed);
+		ConnectButton().IsEnabled(true);
+		rootPage.NotifyUser(L"DisConneted to device ", NotifyType::StatusMessage);
+	}
+
 #pragma region Enumerating Characteristics
 	fire_and_forget Scenario2_Connect::ServiceList_SelectionChanged()
 	{
@@ -229,7 +239,7 @@ namespace winrt::PC_APP::implementation
 		auto selectedItem = ServiceList().SelectedItem().as<ComboBoxItem>();
 		GattDeviceService service = selectedItem ? selectedItem.Tag().as<GattDeviceService>() : nullptr;
 
-		CharacteristicPanel().Visibility(Visibility::Collapsed);
+		//CharacteristicPanel().Visibility(Visibility::Collapsed);
 
 		CharacteristicList().Items().Clear();
 		RemoveValueChangedHandler();
@@ -283,11 +293,11 @@ namespace winrt::PC_APP::implementation
 			}
 		}
 
-		CharacteristicPanel().Visibility(Visibility::Visible);
+		//CharacteristicPanel().Visibility(Visibility::Visible);
 
 		if (DisplayHelpers::GetServiceName(service) == L"Nordic UART") {
 			CharacteristicList().Visibility(Visibility::Collapsed);
-			NUSControlPanel().Visibility(Visibility::Visible);
+			//NUSControlPanel().Visibility(Visibility::Visible);
 
 			GattClientCharacteristicConfigurationDescriptorValue cccdValue = GattClientCharacteristicConfigurationDescriptorValue::None;
 			if ((nordicUARTNotify.CharacteristicProperties() & GattCharacteristicProperties::Indicate) != GattCharacteristicProperties::None)
@@ -325,7 +335,7 @@ namespace winrt::PC_APP::implementation
 		}
 		else {
 			CharacteristicList().Visibility(Visibility::Visible);
-			NUSControlPanel().Visibility(Visibility::Collapsed);
+			//NUSControlPanel().Visibility(Visibility::Collapsed);
 		}
 	}
 #pragma endregion
