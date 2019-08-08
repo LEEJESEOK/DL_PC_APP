@@ -9,15 +9,15 @@ namespace winrt::PC_APP::implementation
     {
         Scenario1_Discovery();
 
-		void OnNavigatedFrom(Windows::UI::Xaml::Navigation::NavigationEventArgs const& e);
+		fire_and_forget OnNavigatedFrom(Windows::UI::Xaml::Navigation::NavigationEventArgs const& e);
 
 		Windows::Foundation::Collections::IObservableVector<Windows::Foundation::IInspectable> KnownDevices()
 		{
 			return m_knownDevices;
 		}
 
-		void ActionButton_Click();
-		void DisconnectButton_Click();
+		fire_and_forget ActionButton_Click();
+		fire_and_forget DisconnectButton_Click();
 
 		bool Not(bool value) { return !value; }
 
@@ -68,6 +68,7 @@ namespace winrt::PC_APP::implementation
 
 		Windows::Foundation::IAsyncAction Lock();
 		Windows::Foundation::IAsyncAction Unlock();
+		Windows::Foundation::IAsyncAction Disconnect();
 		fire_and_forget TestAction();
 	};
 }

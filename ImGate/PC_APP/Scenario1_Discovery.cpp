@@ -114,7 +114,7 @@ namespace winrt::PC_APP::implementation
 		InitializeComponent();
 	}
 
-	void Scenario1_Discovery::OnNavigatedFrom(NavigationEventArgs const&)
+	fire_and_forget Scenario1_Discovery::OnNavigatedFrom(NavigationEventArgs const&)
 	{
 		StopBleDeviceWatcher();
 
@@ -125,9 +125,14 @@ namespace winrt::PC_APP::implementation
 			SampleState::SelectedBleDeviceId = bleDeviceDisplay.Id();
 			SampleState::SelectedBleDeviceName = bleDeviceDisplay.Name();
 		}
-	}
+		auto lifetime = get_strong();
+		if (!co_await ClearBluetoothLEDeviceAsync())
+		{
+			rootPage.NotifyUser(L"Error: Unable to reset app state", NotifyType::ErrorMessage);
+		}
+	}	
 
-	void Scenario1_Discovery::ActionButton_Click() {
+	fire_and_forget Scenario1_Discovery::ActionButton_Click() {
 
 		if (deviceWatcher == nullptr && !isConnect)
 		{
@@ -140,13 +145,17 @@ namespace winrt::PC_APP::implementation
 			ActionButton().Content(box_value(L"Start"));
 
 			StopBleDeviceWatcher();
-			if (isConnect)
-			{
-				ClearBluetoothLEDeviceAsync();
-			}
+			co_await Disconnect();
 		}
 	}
 
+	fire_and_forget Scenario1_Discovery::DisconnectButton_Click()
+	{
+		auto lifetime = get_strong();
+		isConnect = false;
+
+		co_await Disconnect();
+	}
 
 #pragma region Device discovery
 	/// <summary>
@@ -366,15 +375,16 @@ namespace winrt::PC_APP::implementation
 		if (notificationsToken)
 		{
 			// Need to clear the CCCD from the remote device so we stop receiving notifications
-			GattCommunicationStatus result = co_await registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::None);
+			GattCommunicationStatus result = co_await
+				nordicUARTNotify.WriteClientCharacteristicConfigurationDescriptorAsync(
+					GattClientCharacteristicConfigurationDescriptorValue::None);
 			if (result != GattCommunicationStatus::Success)
 			{
 				co_return false;
 			}
 			else
 			{
-				if (nordicUARTNotify != nullptr)
-					nordicUARTNotify.ValueChanged(std::exchange(notificationsToken, {}));
+				RemoveValueChangedHandler();
 			}
 		}
 
@@ -383,6 +393,8 @@ namespace winrt::PC_APP::implementation
 			bluetoothLeDevice.Close();
 			bluetoothLeDevice = nullptr;
 		}
+
+
 		co_return true;
 	}
 
@@ -522,13 +534,6 @@ namespace winrt::PC_APP::implementation
 		}
 	}
 #pragma endregion
-	void Scenario1_Discovery::DisconnectButton_Click()
-	{
-		auto lifetime = get_strong();
-		ClearBluetoothLEDeviceAsync();
-		isConnect = false;
-		rootPage.NotifyUser(L"test", NotifyType::StatusMessage);
-	}
 
 #pragma region ValueChangeHandler
 	void Scenario1_Discovery::AddValueChangedHandler()
@@ -697,6 +702,8 @@ namespace winrt::PC_APP::implementation
 						}));
 	}
 
+
+
 	IAsyncAction Scenario1_Discovery::Lock()
 	{
 		auto lifetime = get_strong();
@@ -715,6 +722,22 @@ namespace winrt::PC_APP::implementation
 		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
 
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
+
+		co_return;
+	}
+
+	IAsyncAction Scenario1_Discovery::Disconnect()
+	{
+		auto lifetime = get_strong();
+
+		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"9", BinaryStringEncoding::Utf8);
+
+		co_await WriteBufferToNordicUARTAsync(writeBuffer);
+
+		if (isConnect)
+		{
+			co_await ClearBluetoothLEDeviceAsync();
+		}
 
 		co_return;
 	}
