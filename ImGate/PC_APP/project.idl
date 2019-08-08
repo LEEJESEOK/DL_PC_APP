@@ -9,6 +9,7 @@ namespace PC_APP
 
 		Windows.UI.Xaml.Controls.ListView ResultsListView{ get; };
 		void ActionButton_Click();
+		void ConnectButton_Click();
 		void DisconnectButton_Click();
 		Boolean Not(Boolean value);
 	};

@@ -17,7 +17,8 @@ namespace winrt::PC_APP::implementation
 		}
 
 		void ActionButton_Click();
-		fire_and_forget DisconnectButton_Click();
+		void ConnectButton_Click();
+		void DisconnectButton_Click();
 
 		bool Not(bool value) { return !value; }
 
@@ -66,9 +67,9 @@ namespace winrt::PC_APP::implementation
 
 		void Timer(const long timeSpan);
 
-		Windows::Foundation::IAsyncAction Lock();
-		Windows::Foundation::IAsyncAction Unlock();
-		Windows::Foundation::IAsyncAction Disconnect();
+		fire_and_forget Lock();
+		fire_and_forget Unlock();
+		fire_and_forget Disconnect();
 		void TestAction();
 	};
 }

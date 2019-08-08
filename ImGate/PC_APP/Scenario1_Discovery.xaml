@@ -28,14 +28,17 @@
     <StackPanel>
         <StackPanel x:Name="header" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
             <Button x:Name="ActionButton" Content="Start" Click="{x:Bind ActionButton_Click}"/>
-            <Button x:Name="DisconnectButton" Content="Disconnect" Click="{x:Bind DisconnectButton_Click}"/>
+            <StackPanel Visibility="Collapsed">
+                <Button x:Name="ConnectButton" Content="Connect" Click="{x:Bind ConnectButton_Click}"/>
+                <Button x:Name="DisconnectButton" Content="Disconnect" Click="{x:Bind DisconnectButton_Click}"/>
+            </StackPanel>
         </StackPanel>
         <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
             <StackPanel>
                 <TextBlock x:Name="CharacteristicLatestValue" Margin="0,10,0,0"/>
             </StackPanel>
         </ScrollViewer>
-        <StackPanel Visibility="Collapsed">
+        <StackPanel Visibility="Visible">
             <ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto" Grid.Row="1" Margin="0,10,0,0"
                       BorderBrush="AntiqueWhite" BorderThickness="1">
                 <ListView x:Name="ResultsListView"
