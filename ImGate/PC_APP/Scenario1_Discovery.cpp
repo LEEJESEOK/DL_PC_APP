@@ -138,8 +138,11 @@ namespace winrt::PC_APP::implementation
 	{
 		if (deviceWatcher == nullptr)
 		{
-			ConnectButton().IsEnabled(false);
 			ConnectButton_Click();
+		}
+		else
+		{
+			DisconnectButton_Click();
 		}
 	}
 
@@ -152,7 +155,6 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::DisconnectButton_Click()
 	{
-		auto lifetime = get_strong();
 		StopBleDeviceWatcher();
 		if (isConnect) {
 			Disconnect();
@@ -252,8 +254,6 @@ namespace winrt::PC_APP::implementation
 		auto lifetime = get_strong();
 		co_await resume_foreground(Dispatcher());
 
-		OutputDebugStringW((L"Added " + deviceInfo.Id() + deviceInfo.Name()).c_str());
-
 		// Protect against race condition if the task runs after the app stopped the deviceWatcher.
 		if (sender == deviceWatcher)
 		{
@@ -290,8 +290,6 @@ namespace winrt::PC_APP::implementation
 		auto lifetime = get_strong();
 		co_await resume_foreground(Dispatcher());
 
-		OutputDebugStringW((L"Updated " + deviceInfoUpdate.Id()).c_str());
-
 		// Protect against race condition if the task runs after the app stopped the deviceWatcher.
 		if (sender == deviceWatcher)
 		{
@@ -323,8 +321,6 @@ namespace winrt::PC_APP::implementation
 		auto lifetime = get_strong();
 		co_await resume_foreground(Dispatcher());
 
-		OutputDebugStringW((L"Removed " + deviceInfoUpdate.Id()).c_str());
-
 		// Protect against race condition if the task runs after the app stopped the deviceWatcher.
 		if (sender == deviceWatcher)
 		{
@@ -352,8 +348,9 @@ namespace winrt::PC_APP::implementation
 		// Protect against race condition if the task runs after the app stopped the deviceWatcher.
 		if (sender == deviceWatcher)
 		{
-			//rootPage.NotifyUser(to_hstring(m_knownDevices.Size()) + L" devices found. Enumeration completed.",
-			//	NotifyType::StatusMessage);
+			rootPage.NotifyUser(to_hstring(m_knownDevices.Size()) + L" devices found. Enumeration completed.",
+				NotifyType::StatusMessage);
+
 		}
 	}
 
@@ -379,27 +376,15 @@ namespace winrt::PC_APP::implementation
 
 		if (notificationsToken)
 		{
-			try
+			// Need to clear the CCCD from the remote device so we stop receiving notifications
+			GattCommunicationStatus result = co_await registeredCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::None);
+			if (result != GattCommunicationStatus::Success)
 			{
-				// BT_Code: Must write the CCCD in order for server to send notifications.
-				// We receive them in the ValueChanged event handler.
-				// Note that this sample configures either Indicate or Notify, but not both.
-				GattCommunicationStatus result = co_await nordicUARTNotify.WriteClientCharacteristicConfigurationDescriptorAsync(
-						GattClientCharacteristicConfigurationDescriptorValue::None);
-				if (result == GattCommunicationStatus::Success)
-				{
-					RemoveValueChangedHandler();
-					rootPage.NotifyUser(L"Successfully un-registered for notifications", NotifyType::StatusMessage);
-				}
-				else
-				{
-					rootPage.NotifyUser(L"Error un-registering for notifications: Status = " + to_hstringGattCommunicationStatus(result), NotifyType::ErrorMessage);
-				}
+				co_return false;
 			}
-			catch (hresult_access_denied& ex)
+			else
 			{
-				// This usually happens when a device reports that it support notify, but it actually doesn't.
-				rootPage.NotifyUser(ex.message(), NotifyType::ErrorMessage);
+				nordicUARTNotify.ValueChanged(std::exchange(notificationsToken, {}));
 			}
 		}
 
@@ -417,6 +402,7 @@ namespace winrt::PC_APP::implementation
 		auto lifetime = get_strong();
 
 		StopBleDeviceWatcher();
+		RemoveValueChangedHandler();
 
 		//connect
 		if (!co_await ClearBluetoothLEDeviceAsync())
@@ -595,7 +581,7 @@ namespace winrt::PC_APP::implementation
 
 			if (result.Status() == GattCommunicationStatus::Success)
 			{
-				rootPage.NotifyUser(L"Successfully wrote value to device", NotifyType::StatusMessage);
+				//rootPage.NotifyUser(L"Successfully wrote value to device", NotifyType::StatusMessage);
 				co_return true;
 			}
 			else
@@ -686,7 +672,6 @@ namespace winrt::PC_APP::implementation
 
 		bool completed = false;
 
-
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
@@ -712,7 +697,6 @@ namespace winrt::PC_APP::implementation
 										if (completed)
 										{
 											ActionButton().Content(box_value(L"Start"));
-											ActionButton().IsEnabled(true);
 										}
 										else
 										{
