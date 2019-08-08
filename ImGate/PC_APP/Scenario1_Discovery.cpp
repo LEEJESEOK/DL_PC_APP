@@ -130,9 +130,9 @@ namespace winrt::PC_APP::implementation
 		{
 			rootPage.NotifyUser(L"Error: Unable to reset app state", NotifyType::ErrorMessage);
 		}
-	}	
+	}
 
-	fire_and_forget Scenario1_Discovery::ActionButton_Click() {
+	void Scenario1_Discovery::ActionButton_Click() {
 
 		if (deviceWatcher == nullptr && !isConnect)
 		{
@@ -142,19 +142,20 @@ namespace winrt::PC_APP::implementation
 		}
 		else
 		{
-			ActionButton().Content(box_value(L"Start"));
-
 			StopBleDeviceWatcher();
-			co_await Disconnect();
+			DisconnectButton_Click();
 		}
 	}
 
 	fire_and_forget Scenario1_Discovery::DisconnectButton_Click()
 	{
 		auto lifetime = get_strong();
-		isConnect = false;
+		if (isConnect) {
+			co_await Disconnect();
+			isConnect = false;
 
-		co_await Disconnect();
+			ActionButton().Content(box_value(L"Start"));
+		}
 	}
 
 #pragma region Device discovery
@@ -742,13 +743,17 @@ namespace winrt::PC_APP::implementation
 		co_return;
 	}
 
-	fire_and_forget Scenario1_Discovery::TestAction()
+	void Scenario1_Discovery::TestAction()
 	{
-		co_await Unlock();
-		//TODO 결과 확인
+		//Unlock();
+		////TODO 결과 확인
 
 
-		Timer(3000);
-		//TODO 결과 확인
+		//Timer(3000);
+		////TODO 결과 확인
+		Disconnect();
+		isConnect = false;
+
+		ActionButton().Content(box_value(L"Start"));
 	}
 }

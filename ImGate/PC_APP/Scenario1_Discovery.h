@@ -16,7 +16,7 @@ namespace winrt::PC_APP::implementation
 			return m_knownDevices;
 		}
 
-		fire_and_forget ActionButton_Click();
+		void ActionButton_Click();
 		fire_and_forget DisconnectButton_Click();
 
 		bool Not(bool value) { return !value; }
@@ -69,7 +69,7 @@ namespace winrt::PC_APP::implementation
 		Windows::Foundation::IAsyncAction Lock();
 		Windows::Foundation::IAsyncAction Unlock();
 		Windows::Foundation::IAsyncAction Disconnect();
-		fire_and_forget TestAction();
+		void TestAction();
 	};
 }
 
