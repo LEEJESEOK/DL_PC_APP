@@ -114,31 +114,19 @@ namespace winrt::PC_APP::implementation
 		InitializeComponent();
 	}
 
-	//fire_and_forget Scenario1_Discovery::OnNavigatedFrom(NavigationEventArgs const&)
-	//{
-	//	auto lifetime = get_strong();
-
-	//	StopBleDeviceWatcher();
-
-	//	// Save the selected device's ID for use in other scenarios.
-	//	auto bleDeviceDisplay = ResultsListView().SelectedItem().as<PC_APP::BluetoothLEDeviceDisplay>();
-	//	if (bleDeviceDisplay != nullptr)
-	//	{
-	//		SampleState::SelectedBleDeviceId = bleDeviceDisplay.Id();
-	//		SampleState::SelectedBleDeviceName = bleDeviceDisplay.Name();
-	//	}
-
-	//	if (!co_await ClearBluetoothLEDeviceAsync())
-	//	{
-	//		rootPage.NotifyUser(L"Error: Unable to reset app state", NotifyType::ErrorMessage);
-	//	}
-	//}
-
 	void Scenario1_Discovery::ActionButton_Click()
 	{
-		ActionButton().Content(box_value(L"Stop"));
-
-		StartBleDeviceWatcher();
+		if (!isTest)
+		{
+			ActionButton().Content(box_value(L"Stop"));
+			isTest = true;
+			TestAction();
+		}
+		else
+		{
+			ActionButton().IsEnabled(false);
+			isTest = false;
+		}
 	}
 #pragma endregion
 
@@ -249,8 +237,6 @@ namespace winrt::PC_APP::implementation
 						//rootPage.NotifyUser(L"Find Test device : " + SampleState::SelectedBleDeviceName + L"/" + SampleState::SelectedBleDeviceId, NotifyType::StatusMessage);
 
 						co_await ConnectTestDevice();
-
-						TestAction();
 					}
 				}
 				else
@@ -416,7 +402,6 @@ namespace winrt::PC_APP::implementation
 		//Service Result
 		if (bluetoothLeDevice != nullptr)
 		{
-			isConnect = true;
 
 			// Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
 			// BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
@@ -549,14 +534,17 @@ namespace winrt::PC_APP::implementation
 		{
 			if (newValue[1] == '8')
 			{
+				newValue = L"Connect";
 				Unlock();
 			}
 			else if (newValue[1] == '1')
 			{
+				newValue = L"Unlock";
 				Lock();
 			}
 			else if (newValue[1] == '0')
 			{
+				newValue = L"Lock";
 				SendDisconnectMessage();
 			}
 		}
@@ -670,15 +658,13 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::Lock()
 	{
-		TimeSpan period(1000 * 10000);
+		TimeSpan period(3000 * 10000);
 
 		bool completed = false;
 
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					auto lifetime = get_strong();
-
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -716,8 +702,6 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					auto lifetime = get_strong();
-
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -756,7 +740,6 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::SendConnectMessage()
 	{
-
 		TimeSpan period(1000 * 10000);
 
 		bool completed = false;
@@ -764,8 +747,6 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					auto lifetime = get_strong();
-
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"8", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -796,7 +777,6 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::SendDisconnectMessage()
 	{
-
 		TimeSpan period(1000 * 10000);
 
 		bool completed = false;
@@ -804,8 +784,6 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					auto lifetime = get_strong();
-
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"9", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -821,15 +799,56 @@ namespace winrt::PC_APP::implementation
 					TimerDestroyedHandler([&](ThreadPoolTimer source)
 						{
 							ClearBluetoothLEDeviceAsync();
+							if (isTest)
+								RestartTestAction();
 
 							Dispatcher().RunAsync(CoreDispatcherPriority::High,
 								DispatchedHandler([&]()
 									{
 										if (completed)
 										{
-											isConnect = false;
-											ActionButton().Content(box_value(L"Start"));
 											rootPage.NotifyUser(L"Disconnect to TestDevice", NotifyType::StatusMessage);
+											if (!isTest)
+											{
+												ActionButton().Content(box_value(L"Start"));
+												ActionButton().IsEnabled(true);
+											}
+										}
+										else
+										{
+										}
+									}));
+						}));
+	}
+
+	void Scenario1_Discovery::RestartTestAction()
+	{
+		TimeSpan period(10000 * 10000);
+
+		bool completed = false;
+
+		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+					TestAction();
+
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
+
+					completed = true;
+
+				}),
+			period,
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
+
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
 										}
 										else
 										{
@@ -840,6 +859,6 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::TestAction()
 	{
-
+		StartBleDeviceWatcher();
 	}
 }

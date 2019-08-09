@@ -35,7 +35,6 @@ namespace winrt::PC_APP::implementation
 
 		//scenario2
 		event_token notificationsToken;
-		bool isConnect = false;
 		Windows::Devices::Bluetooth::BluetoothLEDevice bluetoothLeDevice{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic nordicUARTWrite{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic nordicUARTNotify{ nullptr };
@@ -43,6 +42,7 @@ namespace winrt::PC_APP::implementation
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat presentationFormat{ nullptr };
 
 		bool isTest = false;
+		time_t actionStartTIme, actionEndTime;
 
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
@@ -71,6 +71,7 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget Invert();
 		void SendConnectMessage();
 		void SendDisconnectMessage();
+		void RestartTestAction();
 		void TestAction();
 	};
 }
