@@ -9,7 +9,7 @@ namespace winrt::PC_APP::implementation
     {
         Scenario1_Discovery();
 
-		fire_and_forget OnNavigatedFrom(Windows::UI::Xaml::Navigation::NavigationEventArgs const& e);
+		//fire_and_forget OnNavigatedFrom(Windows::UI::Xaml::Navigation::NavigationEventArgs const& e);
 
 		Windows::Foundation::Collections::IObservableVector<Windows::Foundation::IInspectable> KnownDevices()
 		{
@@ -17,8 +17,6 @@ namespace winrt::PC_APP::implementation
 		}
 
 		void ActionButton_Click();
-		void ConnectButton_Click();
-		void DisconnectButton_Click();
 
 		bool Not(bool value) { return !value; }
 
@@ -44,6 +42,8 @@ namespace winrt::PC_APP::implementation
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic registeredCharacteristic{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat presentationFormat{ nullptr };
 
+		bool isTest = false;
+
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
 		void StopBleDeviceWatcher();
@@ -65,11 +65,12 @@ namespace winrt::PC_APP::implementation
 		Windows::Foundation::IAsyncOperation<bool> WriteBufferToNordicUARTAsync(Windows::Storage::Streams::IBuffer buffer);
 		hstring FormatValueByPresentation(Windows::Storage::Streams::IBuffer const& buffer, Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat const& format);
 
-		void Timer(const long timeSpan);
 
-		fire_and_forget Lock();
-		fire_and_forget Unlock();
-		fire_and_forget Disconnect();
+		void Lock();
+		void Unlock();
+		fire_and_forget Invert();
+		void SendConnectMessage();
+		void SendDisconnectMessage();
 		void TestAction();
 	};
 }

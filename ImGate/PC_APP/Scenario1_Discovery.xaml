@@ -30,16 +30,14 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <StackPanel x:Name="header" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10">
+        <StackPanel x:Name="header" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10">
             <Button x:Name="ActionButton" Content="Start" Click="{x:Bind ActionButton_Click}"/>
-            <StackPanel Visibility="Collapsed">
-                <Button x:Name="ConnectButton" Content="Connect" Click="{x:Bind ConnectButton_Click}"/>
-                <Button x:Name="DisconnectButton" Content="Disconnect" Click="{x:Bind DisconnectButton_Click}"/>
+            <StackPanel Visibility="Visible">
                 <TextBlock x:Name="CharacteristicLatestValue" Margin="0,10,0,0"/>
             </StackPanel>
         </StackPanel>
         <ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto" Grid.Row="1" Margin="0,10,0,0"
-                      BorderBrush="AntiqueWhite" BorderThickness="1">
+                      BorderBrush="AntiqueWhite" BorderThickness="1" Visibility="Collapsed">
             <ListView x:Name="ResultsListView"
                       ItemTemplate="{StaticResource ResultsListViewTemplate}"
                       ItemsSource="{x:Bind KnownDevices, Mode=OneWay}"/>

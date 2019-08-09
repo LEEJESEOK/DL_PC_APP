@@ -114,53 +114,31 @@ namespace winrt::PC_APP::implementation
 		InitializeComponent();
 	}
 
-	fire_and_forget Scenario1_Discovery::OnNavigatedFrom(NavigationEventArgs const&)
-	{
-		auto lifetime = get_strong();
+	//fire_and_forget Scenario1_Discovery::OnNavigatedFrom(NavigationEventArgs const&)
+	//{
+	//	auto lifetime = get_strong();
 
-		StopBleDeviceWatcher();
+	//	StopBleDeviceWatcher();
 
-		// Save the selected device's ID for use in other scenarios.
-		auto bleDeviceDisplay = ResultsListView().SelectedItem().as<PC_APP::BluetoothLEDeviceDisplay>();
-		if (bleDeviceDisplay != nullptr)
-		{
-			SampleState::SelectedBleDeviceId = bleDeviceDisplay.Id();
-			SampleState::SelectedBleDeviceName = bleDeviceDisplay.Name();
-		}
+	//	// Save the selected device's ID for use in other scenarios.
+	//	auto bleDeviceDisplay = ResultsListView().SelectedItem().as<PC_APP::BluetoothLEDeviceDisplay>();
+	//	if (bleDeviceDisplay != nullptr)
+	//	{
+	//		SampleState::SelectedBleDeviceId = bleDeviceDisplay.Id();
+	//		SampleState::SelectedBleDeviceName = bleDeviceDisplay.Name();
+	//	}
 
-		if (!co_await ClearBluetoothLEDeviceAsync())
-		{
-			rootPage.NotifyUser(L"Error: Unable to reset app state", NotifyType::ErrorMessage);
-		}
-	}
+	//	if (!co_await ClearBluetoothLEDeviceAsync())
+	//	{
+	//		rootPage.NotifyUser(L"Error: Unable to reset app state", NotifyType::ErrorMessage);
+	//	}
+	//}
 
 	void Scenario1_Discovery::ActionButton_Click()
-	{
-		if (deviceWatcher == nullptr)
-		{
-			ConnectButton_Click();
-		}
-		else
-		{
-			DisconnectButton_Click();
-		}
-	}
-
-	void Scenario1_Discovery::ConnectButton_Click()
 	{
 		ActionButton().Content(box_value(L"Stop"));
 
 		StartBleDeviceWatcher();
-	}
-
-	void Scenario1_Discovery::DisconnectButton_Click()
-	{
-		StopBleDeviceWatcher();
-		if (isConnect) {
-			Disconnect();
-			isConnect = false;
-		}
-		ActionButton().Content(box_value(L"Start"));
 	}
 #pragma endregion
 
@@ -433,11 +411,13 @@ namespace winrt::PC_APP::implementation
 			}
 		}
 
+		rootPage.NotifyUser(L"Connect to TestDevice ", NotifyType::StatusMessage);
+
+		//Service Result
 		if (bluetoothLeDevice != nullptr)
 		{
 			isConnect = true;
 
-			//Service Result
 			// Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
 			// BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
 			// If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
@@ -520,7 +500,7 @@ namespace winrt::PC_APP::implementation
 				if (status == GattCommunicationStatus::Success)
 				{
 					AddValueChangedHandler();
-					rootPage.NotifyUser(L"Successfully subscribed for value changes", NotifyType::StatusMessage);
+					//rootPage.NotifyUser(L"Successfully subscribed for value changes", NotifyType::StatusMessage);
 				}
 				else
 				{
@@ -533,6 +513,9 @@ namespace winrt::PC_APP::implementation
 				rootPage.NotifyUser(ex.message(), NotifyType::ErrorMessage);
 			}
 		}
+
+
+		SendConnectMessage();
 	}
 #pragma endregion
 
@@ -561,10 +544,27 @@ namespace winrt::PC_APP::implementation
 		// BT_Code: An Indicate or Notify reported that the value has changed.
 		// Display the new value with a timestamp.
 		hstring newValue = FormatValueByPresentation(args.CharacteristicValue(), presentationFormat);
+
+		if (newValue[0] == '0')
+		{
+			if (newValue[1] == '8')
+			{
+				Unlock();
+			}
+			else if (newValue[1] == '1')
+			{
+				Lock();
+			}
+			else if (newValue[1] == '0')
+			{
+				SendDisconnectMessage();
+			}
+		}
+
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
-		hstring message = L"Value at " + to_hstring(buffer) + L": " + newValue;
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + newValue;
 		co_await resume_foreground(Dispatcher());
 		CharacteristicLatestValue().Text(message);
 	}
@@ -643,9 +643,11 @@ namespace winrt::PC_APP::implementation
 		else if (buffer != nullptr)
 		{
 			// We don't know what format to use. Let's try some well-known profiles, or default back to UTF-8.
+			// nordicUARTNotify
 			if (nordicUARTNotify != nullptr)
 			{
-				return L"Receive message : " + CryptographicBuffer::ConvertBinaryToString(BinaryStringEncoding::Utf8, buffer);
+				hstring message = CryptographicBuffer::ConvertBinaryToString(BinaryStringEncoding::Utf8, buffer);
+				return message;
 			}
 			else
 			{
@@ -666,16 +668,19 @@ namespace winrt::PC_APP::implementation
 		}
 	}
 
-	void Scenario1_Discovery::Timer(const long timeSpan)
+	void Scenario1_Discovery::Lock()
 	{
-		TimeSpan period(timeSpan * 10000);
+		TimeSpan period(1000 * 10000);
 
 		bool completed = false;
 
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					Lock();
+					auto lifetime = get_strong();
+
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
 
 					Dispatcher().RunAsync(CoreDispatcherPriority::High,
 						DispatchedHandler([&]()
@@ -688,15 +693,12 @@ namespace winrt::PC_APP::implementation
 			period,
 					TimerDestroyedHandler([&](ThreadPoolTimer source)
 						{
-							Disconnect();
-							isConnect = false;
 
 							Dispatcher().RunAsync(CoreDispatcherPriority::High,
 								DispatchedHandler([&]()
 									{
 										if (completed)
 										{
-											ActionButton().Content(box_value(L"Start"));
 										}
 										else
 										{
@@ -705,41 +707,139 @@ namespace winrt::PC_APP::implementation
 						}));
 	}
 
+	void Scenario1_Discovery::Unlock()
+	{
+		TimeSpan period(1000 * 10000);
 
+		bool completed = false;
 
-	fire_and_forget Scenario1_Discovery::Lock()
+		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+					auto lifetime = get_strong();
+
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
+
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
+
+					completed = true;
+
+				}),
+			period,
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
+
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
+	}
+
+	fire_and_forget Scenario1_Discovery::Invert()
 	{
 		auto lifetime = get_strong();
 
-		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
+		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"2", BinaryStringEncoding::Utf8);
 		co_await WriteBufferToNordicUARTAsync(writeBuffer);
 	}
 
-	fire_and_forget Scenario1_Discovery::Unlock()
+	void Scenario1_Discovery::SendConnectMessage()
 	{
-		auto lifetime = get_strong();
 
-		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
-		co_await WriteBufferToNordicUARTAsync(writeBuffer);
+		TimeSpan period(1000 * 10000);
+
+		bool completed = false;
+
+		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+					auto lifetime = get_strong();
+
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"8", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
+
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
+
+					completed = true;
+
+				}),
+			period,
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
+
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
 	}
 
-	fire_and_forget Scenario1_Discovery::Disconnect()
+	void Scenario1_Discovery::SendDisconnectMessage()
 	{
-		auto lifetime = get_strong();
 
-		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"9", BinaryStringEncoding::Utf8);
-		co_await WriteBufferToNordicUARTAsync(writeBuffer);
+		TimeSpan period(1000 * 10000);
 
-		ClearBluetoothLEDeviceAsync();
+		bool completed = false;
+
+		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+					auto lifetime = get_strong();
+
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"9", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
+
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
+
+					completed = true;
+
+				}),
+			period,
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
+							ClearBluetoothLEDeviceAsync();
+
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+											isConnect = false;
+											ActionButton().Content(box_value(L"Start"));
+											rootPage.NotifyUser(L"Disconnect to TestDevice", NotifyType::StatusMessage);
+										}
+										else
+										{
+										}
+									}));
+						}));
 	}
 
 	void Scenario1_Discovery::TestAction()
 	{
-		Unlock();
-		////TODO 결과 확인
-
-		Timer(3000);
-		////TODO 결과 확인
 
 	}
 }
