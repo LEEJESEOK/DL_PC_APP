@@ -522,7 +522,7 @@ namespace winrt::PC_APP::implementation
 	{
 		auto lifetime = get_strong();
 
-		std::clock_t elapsedTime;
+		std::clock_t elapsedTime = 0;
 
 		// BT_Code: An Indicate or Notify reported that the value has changed.
 		// Display the new value with a timestamp.
@@ -548,6 +548,10 @@ namespace winrt::PC_APP::implementation
 				SendDisconnectMessage();
 			}
 		}
+		else {
+			actionEndTime = std::clock();
+			elapsedTime = actionEndTime - actionStartTime;
+		}
 
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
@@ -555,6 +559,9 @@ namespace winrt::PC_APP::implementation
 		hstring message = L"Value at " + to_hstring(buffer) + L" : " + newValue + L"(" + to_hstring(elapsedTime) + L"ms)";
 		co_await resume_foreground(Dispatcher());
 		CharacteristicLatestValue().Text(message);
+		hstring temp = Log().Text() + L"\n" + message;
+		Log().Text(temp);
+
 		actionStartTime = actionEndTime = 0;
 	}
 #pragma endregion
@@ -829,6 +836,8 @@ namespace winrt::PC_APP::implementation
 											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnect" + L"(" + to_hstring(elapsedTime) + L"ms)";
 											resume_foreground(Dispatcher());
 											CharacteristicLatestValue().Text(message);
+											hstring temp = Log().Text() + L"\n" + message;
+											Log().Text(temp);
 
 											actionStartTime = actionEndTime = 0;
 
@@ -847,7 +856,7 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::RestartTestAction()
 	{
-		TimeSpan period(15000 * 10000);
+		TimeSpan period(20000 * 10000);
 
 		bool completed = false;
 
