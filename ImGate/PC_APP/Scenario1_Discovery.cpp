@@ -534,7 +534,7 @@ namespace winrt::PC_APP::implementation
 			elapsedTime = actionEndTime - actionStartTime;
 			if (newValue[1] == '8')
 			{
-				newValue = L"Connect";
+				newValue = L"Connected";
 				Unlock();
 			}
 			else if (newValue[1] == '1')
@@ -759,8 +759,6 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					actionStartTime = std::clock();
-
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"8", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -833,7 +831,7 @@ namespace winrt::PC_APP::implementation
 											std::time_t now = clock::to_time_t(clock::now());
 											char buffer[26];
 											ctime_s(buffer, ARRAYSIZE(buffer), &now);
-											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnect" + L"(" + to_hstring(elapsedTime) + L"ms)";
+											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnected" + L"(" + to_hstring(elapsedTime) + L"ms)";
 											resume_foreground(Dispatcher());
 											CharacteristicLatestValue().Text(message);
 											hstring temp = Log().Text() + L"\n" + message;
