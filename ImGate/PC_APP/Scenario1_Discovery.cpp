@@ -160,10 +160,6 @@ namespace winrt::PC_APP::implementation
 		// Start over with an empty collection.
 		m_knownDevices.Clear();
 
-		//hstring tempString = logtext().Text() + L"\n";
-		//hstring message = tempString + L"scan";
-		//logtext().Text(message);
-
 		// Start the watcher. Active enumeration is limited to approximately 30 seconds.
 		// This limits power usage and reduces interference with other Bluetooth activities.
 		// To monitor for the presence of Bluetooth LE devices for an extended period,
@@ -526,6 +522,8 @@ namespace winrt::PC_APP::implementation
 	{
 		auto lifetime = get_strong();
 
+		std::clock_t elapsedTime;
+
 		// BT_Code: An Indicate or Notify reported that the value has changed.
 		// Display the new value with a timestamp.
 		hstring newValue = FormatValueByPresentation(args.CharacteristicValue(), presentationFormat);
@@ -533,6 +531,7 @@ namespace winrt::PC_APP::implementation
 		if (newValue[0] == '0')
 		{
 			actionEndTime = std::clock();
+			elapsedTime = actionEndTime - actionStartTime;
 			if (newValue[1] == '8')
 			{
 				newValue = L"Connect";
@@ -553,7 +552,7 @@ namespace winrt::PC_APP::implementation
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
-		hstring message = L"Value at " + to_hstring(buffer) + L" : " + newValue + L"(" + to_hstring(actionEndTime - actionStartTime) + L"ms)";
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + newValue + L"(" + to_hstring(elapsedTime) + L"ms)";
 		co_await resume_foreground(Dispatcher());
 		CharacteristicLatestValue().Text(message);
 		actionStartTime = actionEndTime = 0;
@@ -812,6 +811,8 @@ namespace winrt::PC_APP::implementation
 
 							actionEndTime = std::clock();
 
+							std::clock_t elapsedTime = actionEndTime - actionStartTime;
+
 							if (isTest)
 								RestartTestAction();
 
@@ -825,7 +826,7 @@ namespace winrt::PC_APP::implementation
 											std::time_t now = clock::to_time_t(clock::now());
 											char buffer[26];
 											ctime_s(buffer, ARRAYSIZE(buffer), &now);
-											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnect" + L"(" + to_hstring(actionEndTime - actionStartTime) + L"ms)";
+											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnect" + L"(" + to_hstring(elapsedTime) + L"ms)";
 											resume_foreground(Dispatcher());
 											CharacteristicLatestValue().Text(message);
 
