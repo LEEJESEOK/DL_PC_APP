@@ -532,6 +532,7 @@ namespace winrt::PC_APP::implementation
 
 		if (newValue[0] == '0')
 		{
+			actionEndTime = std::clock();
 			if (newValue[1] == '8')
 			{
 				newValue = L"Connect";
@@ -552,9 +553,10 @@ namespace winrt::PC_APP::implementation
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
-		hstring message = L"Value at " + to_hstring(buffer) + L" : " + newValue;
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + newValue + L"(" + to_hstring(actionEndTime - actionStartTime) + L"ms)";
 		co_await resume_foreground(Dispatcher());
 		CharacteristicLatestValue().Text(message);
+		actionStartTime = actionEndTime = 0;
 	}
 #pragma endregion
 
@@ -665,6 +667,8 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
+					actionStartTime = std::clock();
+
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -702,6 +706,8 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
+					actionStartTime = std::clock();
+
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -747,6 +753,8 @@ namespace winrt::PC_APP::implementation
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
+					actionStartTime = std::clock();
+
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"8", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -777,13 +785,15 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::SendDisconnectMessage()
 	{
-		TimeSpan period(1000 * 10000);
+		TimeSpan period(3000 * 10000);
 
 		bool completed = false;
 
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
+					actionStartTime = std::clock();
+
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"9", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
@@ -799,6 +809,9 @@ namespace winrt::PC_APP::implementation
 					TimerDestroyedHandler([&](ThreadPoolTimer source)
 						{
 							ClearBluetoothLEDeviceAsync();
+
+							actionEndTime = std::clock();
+
 							if (isTest)
 								RestartTestAction();
 
@@ -808,6 +821,16 @@ namespace winrt::PC_APP::implementation
 										if (completed)
 										{
 											rootPage.NotifyUser(L"Disconnect to TestDevice", NotifyType::StatusMessage);
+											
+											std::time_t now = clock::to_time_t(clock::now());
+											char buffer[26];
+											ctime_s(buffer, ARRAYSIZE(buffer), &now);
+											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnect" + L"(" + to_hstring(actionEndTime - actionStartTime) + L"ms)";
+											resume_foreground(Dispatcher());
+											CharacteristicLatestValue().Text(message);
+
+											actionStartTime = actionEndTime = 0;
+
 											if (!isTest)
 											{
 												ActionButton().Content(box_value(L"Start"));
@@ -823,7 +846,7 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::RestartTestAction()
 	{
-		TimeSpan period(10000 * 10000);
+		TimeSpan period(15000 * 10000);
 
 		bool completed = false;
 
@@ -859,6 +882,7 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::TestAction()
 	{
+		actionStartTime = std::clock();
 		StartBleDeviceWatcher();
 	}
 }
