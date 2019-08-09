@@ -17,7 +17,6 @@ hstring implementation::MainPage::FEATURE_NAME()
 IVector<Scenario> implementation::MainPage::scenariosInner = winrt::single_threaded_observable_vector<Scenario>(
 {
     Scenario{ L"Motor Test", xaml_typename<PC_APP::Scenario1_Discovery>() },
-	Scenario{ L"Test", xaml_typename<PC_APP::Scenario2_Connect>() },
 });
 
 hstring SampleState::SelectedBleDeviceId;
