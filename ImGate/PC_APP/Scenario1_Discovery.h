@@ -80,6 +80,9 @@ namespace winrt::PC_APP::implementation
 		void StartTimeoutTimer();
 		void TestAction();
 		void RestartTestAction();
+
+		void LogWriter(hstring str, std::clock_t elapsedTime);
+		void LogWriter(hstring str);
 	};
 }
 
