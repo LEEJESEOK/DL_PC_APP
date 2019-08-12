@@ -393,7 +393,7 @@ namespace winrt::PC_APP::implementation
 			}
 		}
 
-		rootPage.NotifyUser(L"Connect to TestDevice ", NotifyType::StatusMessage);
+		rootPage.NotifyUser(L"Connected to " + testDeviceName, NotifyType::StatusMessage);
 
 		//Service Result
 		if (bluetoothLeDevice != nullptr)
@@ -548,10 +548,6 @@ namespace winrt::PC_APP::implementation
 				SendDisconnectMessage();
 			}
 		}
-		else {
-			actionEndTime = std::clock();
-			elapsedTime = actionEndTime - actionStartTime;
-		}
 
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
@@ -561,7 +557,6 @@ namespace winrt::PC_APP::implementation
 		CharacteristicLatestValue().Text(message);
 		hstring temp = Log().Text() + L"\n" + message;
 		Log().Text(temp);
-
 		actionStartTime = actionEndTime = 0;
 	}
 #pragma endregion
@@ -826,7 +821,7 @@ namespace winrt::PC_APP::implementation
 									{
 										if (completed)
 										{
-											rootPage.NotifyUser(L"Disconnect to TestDevice", NotifyType::StatusMessage);
+											rootPage.NotifyUser(L"Disconnect to " + testDeviceName, NotifyType::StatusMessage);
 											
 											std::time_t now = clock::to_time_t(clock::now());
 											char buffer[26];
