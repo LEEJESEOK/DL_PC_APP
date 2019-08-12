@@ -546,7 +546,8 @@ namespace winrt::PC_APP::implementation
 			if (newValue[1] == '8')
 			{
 				newValue = L"Connected";
-				Unlock();
+				//Unlock();
+				SendTestMessage();
 			}
 			else if (newValue[1] == '1')
 			{
@@ -557,6 +558,11 @@ namespace winrt::PC_APP::implementation
 			{
 				newValue = L"Lock";
 				SendDisconnectMessage();
+			}
+			else if (newValue[1] == '3')
+			{
+				newValue = L"Test";
+				Unlock();
 			}
 		}
 
@@ -819,8 +825,6 @@ namespace winrt::PC_APP::implementation
 							if (isTest)
 								RestartTestAction();
 
-							StartTimeoutTimer();
-
 							Dispatcher().RunAsync(CoreDispatcherPriority::High,
 								DispatchedHandler([&]()
 									{
@@ -850,75 +854,54 @@ namespace winrt::PC_APP::implementation
 	{
 		TimeSpan period(3000 * 10000);
 
-		bool completed = false;
-
 		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-
+					if (retryCnt != 0)
+					{
+						IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"3", BinaryStringEncoding::Utf8);
+						WriteBufferToNordicUARTAsync(writeBuffer);
+					}
+					else
+						messageTimeoutTimer.Cancel();
 					Dispatcher().RunAsync(CoreDispatcherPriority::High,
 						DispatchedHandler([&]()
 							{
 							}));
-
-					completed = true;
-
 				}),
-			period,
-					TimerDestroyedHandler([&](ThreadPoolTimer source)
-						{
-
-							Dispatcher().RunAsync(CoreDispatcherPriority::High,
-								DispatchedHandler([&]()
-									{
-										if (completed)
-										{
-										}
-										else
-										{
-										}
-									}));
-						}));
+			period);
 	}
 
 	void Scenario1_Discovery::StartTimeoutTimer()
 	{
 		TimeSpan period(TIMEOUT_MS * 10000);
 
-		bool completed = false;
-
-		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
-			TimerElapsedHandler([&](ThreadPoolTimer source)
-				{
-					retryCnt--;
-					if (retryCnt == 0)
+		if (retryCnt != 0)
+			messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
+				TimerElapsedHandler([&](ThreadPoolTimer source)
 					{
-						// TODO action for timeout
-					}
-					Dispatcher().RunAsync(CoreDispatcherPriority::High,
-						DispatchedHandler([&]()
-							{
-							}));
-
-					completed = true;
-
-				}),
-			period,
-					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						retryCnt--;
+						if (retryCnt == 0)
 						{
-							messageTimeoutTimer = NULL;
+							// TODO action for MAX_RETRY
+						}
 
-							Dispatcher().RunAsync(CoreDispatcherPriority::High,
-								DispatchedHandler([&]()
-									{
-										if (completed)
-										{
-										}
-										else
-										{
-										}
-									}));
-						}));
+						//TODO restart action
+						// restart
+						StartTimeoutTimer();
+						SendTestMessage();
+
+
+						Dispatcher().RunAsync(CoreDispatcherPriority::High,
+							DispatchedHandler([&]()
+								{
+									if (retryCnt == 0) {
+										LogWriter(L"Timeout EVENT");
+									}
+									LogWriter(L"Generate Timeout : " + to_hstring(retryCnt));
+								}));
+					}),
+				period);
 	}
 
 	void Scenario1_Discovery::TestAction()
