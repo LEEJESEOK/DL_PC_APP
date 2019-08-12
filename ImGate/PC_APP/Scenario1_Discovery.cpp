@@ -25,7 +25,7 @@ using namespace Windows::System::Threading;
 
 namespace
 {
-	const hstring testDeviceName = L"Nordic_test";
+	const hstring testDeviceName = L"Nordic_test2";
 	const int TIMEOUT_MS = 5000;
 	const int MAX_RETRY = 3;
 
