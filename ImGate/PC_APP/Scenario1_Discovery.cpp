@@ -7,8 +7,6 @@
 #include "BluetoothLEDeviceDisplay.h"
 #include "BluetoothLEAttributeDisplay.h"
 
-#include "winrt/Windows.System.Threading.h"
-
 using namespace winrt;
 using namespace Windows::Devices::Bluetooth;
 using namespace Windows::Devices::Bluetooth::GenericAttributeProfile;
@@ -28,6 +26,8 @@ using namespace Windows::System::Threading;
 namespace
 {
 	const hstring testDeviceName = L"Nordic_test";
+	const int TIMEOUT_MS = 5000;
+	const int MAX_RETRY = 3;
 
 	// Utility function to convert a string to an int32_t and detect bad input
 	bool TryParseInt(const wchar_t* str, int32_t& result)
@@ -112,6 +112,8 @@ namespace winrt::PC_APP::implementation
 	Scenario1_Discovery::Scenario1_Discovery()
 	{
 		InitializeComponent();
+
+		retryCnt = MAX_RETRY;
 	}
 
 	void Scenario1_Discovery::ActionButton_Click()
@@ -122,7 +124,7 @@ namespace winrt::PC_APP::implementation
 			isTest = true;
 			TestAction();
 		}
-		else
+		else if (isTest)
 		{
 			ActionButton().IsEnabled(false);
 			isTest = false;
@@ -368,6 +370,15 @@ namespace winrt::PC_APP::implementation
 		StopBleDeviceWatcher();
 		RemoveValueChangedHandler();
 
+		std::time_t now = clock::to_time_t(clock::now());
+		char buffer[26];
+		ctime_s(buffer, ARRAYSIZE(buffer), &now);
+		hstring message = L"Value at " + to_hstring(buffer) + L" : Try to connect to " + testDeviceName;
+		co_await resume_foreground(Dispatcher());
+		CharacteristicLatestValue().Text(message);
+		hstring temp = Log().Text() + L"\n" + message;
+		Log().Text(temp);
+
 		//connect
 		if (!co_await ClearBluetoothLEDeviceAsync())
 		{
@@ -397,7 +408,7 @@ namespace winrt::PC_APP::implementation
 			}
 		}
 
-		rootPage.NotifyUser(L"Connected to " + testDeviceName, NotifyType::StatusMessage);
+		//rootPage.NotifyUser(L"Connected to " + testDeviceName, NotifyType::StatusMessage);
 
 		//Service Result
 		if (bluetoothLeDevice != nullptr)
@@ -467,12 +478,7 @@ namespace winrt::PC_APP::implementation
 			//End of Service Result
 
 			GattClientCharacteristicConfigurationDescriptorValue cccdValue = GattClientCharacteristicConfigurationDescriptorValue::None;
-			if ((nordicUARTNotify.CharacteristicProperties() & GattCharacteristicProperties::Indicate) != GattCharacteristicProperties::None)
-			{
-				cccdValue = GattClientCharacteristicConfigurationDescriptorValue::Indicate;
-			}
-
-			else if ((nordicUARTNotify.CharacteristicProperties() & GattCharacteristicProperties::Notify) != GattCharacteristicProperties::None)
+			if ((nordicUARTNotify.CharacteristicProperties() & GattCharacteristicProperties::Notify) != GattCharacteristicProperties::None)
 			{
 				cccdValue = GattClientCharacteristicConfigurationDescriptorValue::Notify;
 			}
@@ -536,6 +542,13 @@ namespace winrt::PC_APP::implementation
 		{
 			actionEndTime = std::clock();
 			elapsedTime = actionEndTime - actionStartTime;
+
+			if (messageTimeoutTimer != NULL)
+				messageTimeoutTimer.Cancel();
+
+			StartTimeoutTimer();
+			retryCnt = MAX_RETRY;
+
 			if (newValue[1] == '8')
 			{
 				newValue = L"Connected";
@@ -704,7 +717,7 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::Unlock()
 	{
-		TimeSpan period(1000 * 10000);
+		TimeSpan period(3000 * 10000);
 
 		bool completed = false;
 
@@ -751,39 +764,8 @@ namespace winrt::PC_APP::implementation
 
 	void Scenario1_Discovery::SendConnectMessage()
 	{
-		TimeSpan period(1000 * 10000);
-
-		bool completed = false;
-
-		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
-			TimerElapsedHandler([&](ThreadPoolTimer source)
-				{
-					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"8", BinaryStringEncoding::Utf8);
-					WriteBufferToNordicUARTAsync(writeBuffer);
-
-					Dispatcher().RunAsync(CoreDispatcherPriority::High,
-						DispatchedHandler([&]()
-							{
-							}));
-
-					completed = true;
-
-				}),
-			period,
-					TimerDestroyedHandler([&](ThreadPoolTimer source)
-						{
-
-							Dispatcher().RunAsync(CoreDispatcherPriority::High,
-								DispatchedHandler([&]()
-									{
-										if (completed)
-										{
-										}
-										else
-										{
-										}
-									}));
-						}));
+		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"8", BinaryStringEncoding::Utf8);
+		WriteBufferToNordicUARTAsync(writeBuffer);
 	}
 
 	void Scenario1_Discovery::SendDisconnectMessage()
@@ -820,17 +802,19 @@ namespace winrt::PC_APP::implementation
 							if (isTest)
 								RestartTestAction();
 
+							StartTimeoutTimer();
+
 							Dispatcher().RunAsync(CoreDispatcherPriority::High,
 								DispatchedHandler([&]()
 									{
 										if (completed)
 										{
-											rootPage.NotifyUser(L"Disconnect to " + testDeviceName, NotifyType::StatusMessage);
-											
+											//rootPage.NotifyUser(L"Disconnect to " + testDeviceName, NotifyType::StatusMessage);
+
 											std::time_t now = clock::to_time_t(clock::now());
 											char buffer[26];
 											ctime_s(buffer, ARRAYSIZE(buffer), &now);
-											hstring message =  L"Value at " + to_hstring(buffer) + L" : Disconnected" + L"(" + to_hstring(elapsedTime) + L"ms)";
+											hstring message = L"Value at " + to_hstring(buffer) + L" : Disconnected" + L"(" + to_hstring(elapsedTime) + L"ms)";
 											resume_foreground(Dispatcher());
 											CharacteristicLatestValue().Text(message);
 											hstring temp = Log().Text() + L"\n" + message;
@@ -851,9 +835,88 @@ namespace winrt::PC_APP::implementation
 						}));
 	}
 
+	void Scenario1_Discovery::SendTestMessage()
+	{
+		TimeSpan period(3000 * 10000);
+
+		bool completed = false;
+
+		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
+
+					completed = true;
+
+				}),
+			period,
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
+
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
+	}
+
+	void Scenario1_Discovery::StartTimeoutTimer()
+	{
+		TimeSpan period(TIMEOUT_MS * 10000);
+
+		bool completed = false;
+
+		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+					// TODO reduce try count
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
+
+					completed = true;
+
+				}),
+			period,
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
+							messageTimeoutTimer = NULL;
+
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
+	}
+
+
+
+	void Scenario1_Discovery::TestAction()
+	{
+		actionStartTime = std::clock();
+		StartBleDeviceWatcher();
+	}
+
 	void Scenario1_Discovery::RestartTestAction()
 	{
-		TimeSpan period(20000 * 10000);
+		TimeSpan period(15000 * 10000);
 
 		bool completed = false;
 
@@ -885,11 +948,5 @@ namespace winrt::PC_APP::implementation
 										}
 									}));
 						}));
-	}
-
-	void Scenario1_Discovery::TestAction()
-	{
-		actionStartTime = std::clock();
-		StartBleDeviceWatcher();
 	}
 }

@@ -3,6 +3,8 @@
 #include "Scenario1_Discovery.g.h"
 #include "MainPage.h"
 
+#include "winrt/Windows.System.Threading.h"
+
 namespace winrt::PC_APP::implementation
 {
     struct Scenario1_Discovery : Scenario1_DiscoveryT<Scenario1_Discovery>
@@ -41,6 +43,9 @@ namespace winrt::PC_APP::implementation
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic registeredCharacteristic{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat presentationFormat{ nullptr };
 
+		Windows::System::Threading::ThreadPoolTimer messageTimeoutTimer = NULL;
+		int retryCnt;
+
 		bool isTest = false;
 		std::clock_t actionStartTime = 0, actionEndTime = 0;
 
@@ -71,8 +76,10 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget Invert();
 		void SendConnectMessage();
 		void SendDisconnectMessage();
-		void RestartTestAction();
+		void SendTestMessage();
+		void StartTimeoutTimer();
 		void TestAction();
+		void RestartTestAction();
 	};
 }
 
