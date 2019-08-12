@@ -99,10 +99,6 @@
       <DependentUpon>Scenario1_Discovery.xaml</DependentUpon>
       <SubType>Code</SubType>
     </ClInclude>
-    <ClInclude Include="Scenario2_Connect.h">
-      <DependentUpon>Scenario2_Connect.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -112,9 +108,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Scenario1_Discovery.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Scenario2_Connect.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Styles.xaml" />
@@ -157,10 +150,6 @@
     </ClCompile>
     <ClCompile Include="Scenario1_Discovery.cpp">
       <DependentUpon>Scenario1_Discovery.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </ClCompile>
-    <ClCompile Include="Scenario2_Connect.cpp">
-      <DependentUpon>Scenario2_Connect.xaml</DependentUpon>
       <SubType>Code</SubType>
     </ClCompile>
   </ItemGroup>

@@ -12,26 +12,6 @@ namespace PC_APP
 		Boolean Not(Boolean value);
 	};
 
-	[default_interface]
-	runtimeclass Scenario2_Connect : Windows.UI.Xaml.Controls.Page
-	{
-		Scenario2_Connect();
-
-		void ConnectButton_Click();
-		void ServiceList_SelectionChanged();
-		void CharacteristicList_SelectionChanged();
-		void CharacteristicReadButton_Click();
-		void CharacteristicWriteButton_Click();
-		void CharacteristicWriteButtonInt_Click();
-		void ValueChangedSubscribeToggle_Click();
-
-		void LockButton_Click();
-		void UnlockButton_Click();
-		void TestButton_Click();
-
-		void DisConnectButton_Click();
-	};
-
 	/// <summary>
 	///     Display class used to represent a BluetoothLEDevice in the Device list
 	/// </summary>
