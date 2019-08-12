@@ -42,7 +42,7 @@ namespace winrt::PC_APP::implementation
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat presentationFormat{ nullptr };
 
 		bool isTest = false;
-		std::clock_t actionStartTime, actionEndTime;
+		std::clock_t actionStartTime = 0, actionEndTime = 0;
 
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
