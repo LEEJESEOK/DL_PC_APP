@@ -73,6 +73,8 @@ namespace winrt::PC_APP::implementation
 		void SendDisconnectMessage();
 		void RestartTestAction();
 		void TestAction();
+		void LogWriter(hstring nvalue, std::clock_t elapsTime);
+		void LogWriter(hstring message);
 	};
 }
 
