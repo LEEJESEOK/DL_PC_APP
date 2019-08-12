@@ -308,9 +308,13 @@ namespace winrt::PC_APP::implementation
 		// Protect against race condition if the task runs after the app stopped the deviceWatcher.
 		if (sender == deviceWatcher)
 		{
-			rootPage.NotifyUser(to_hstring(m_knownDevices.Size()) + L" devices found. Enumeration completed.",
-				NotifyType::StatusMessage);
+			//rootPage.NotifyUser(to_hstring(m_knownDevices.Size()) + L" devices found. Enumeration completed.",
+			//	NotifyType::StatusMessage);
+			rootPage.NotifyUser(testDeviceName + L" not found. Enumeration completed.",
+				NotifyType::ErrorMessage);
 
+			//TODO max_try_count
+			StartBleDeviceWatcher();
 		}
 	}
 
