@@ -207,9 +207,9 @@ namespace winrt::PC_APP::implementation
 	std::vector<Windows::Devices::Enumeration::DeviceInformation>::iterator Scenario1_Discovery::FindUnknownDevices(hstring const& id)
 	{
 		return std::find_if(UnknownDevices.begin(), UnknownDevices.end(), [&](auto&& bleDeviceInfo)
-		{
-			return bleDeviceInfo.Id() == id;
-		});
+			{
+				return bleDeviceInfo.Id() == id;
+			});
 	}
 
 	fire_and_forget Scenario1_Discovery::DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
@@ -287,7 +287,7 @@ namespace winrt::PC_APP::implementation
 		if (sender == deviceWatcher)
 		{
 			// Find the corresponding DeviceInformation in the collection and remove it.
-			auto[bleDeviceDisplay, index] = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id());
+			auto [bleDeviceDisplay, index] = FindBluetoothLEDeviceDisplay(deviceInfoUpdate.Id());
 			if (bleDeviceDisplay != nullptr)
 			{
 				m_knownDevices.RemoveAt(index);
@@ -371,7 +371,7 @@ namespace winrt::PC_APP::implementation
 		RemoveValueChangedHandler();
 
 		co_await resume_foreground(Dispatcher());
-		logWriter(L" : Try to connect to " + testDeviceName);
+		LogWriter(L" : Try to connect to " + testDeviceName);
 
 		//connect
 		if (!co_await ClearBluetoothLEDeviceAsync())
@@ -701,35 +701,35 @@ namespace winrt::PC_APP::implementation
 
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
-		{
-			actionStartTime = std::clock();
+				{
+					actionStartTime = std::clock();
 
-			IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
-			WriteBufferToNordicUARTAsync(writeBuffer);
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"0", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-			}));
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
 
-			completed = true;
+					completed = true;
 
-		}),
+				}),
 			period,
-			TimerDestroyedHandler([&](ThreadPoolTimer source)
-		{
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-				if (completed)
-				{
-				}
-				else
-				{
-				}
-			}));
-		}));
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
 	}
 
 	void Scenario1_Discovery::Unlock()
@@ -740,35 +740,35 @@ namespace winrt::PC_APP::implementation
 
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
-		{
-			actionStartTime = std::clock();
+				{
+					actionStartTime = std::clock();
 
-			IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
-			WriteBufferToNordicUARTAsync(writeBuffer);
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"1", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-			}));
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
 
-			completed = true;
+					completed = true;
 
-		}),
+				}),
 			period,
-			TimerDestroyedHandler([&](ThreadPoolTimer source)
-		{
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-				if (completed)
-				{
-				}
-				else
-				{
-				}
-			}));
-		}));
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
 	}
 
 	fire_and_forget Scenario1_Discovery::Invert()
@@ -799,14 +799,14 @@ namespace winrt::PC_APP::implementation
 					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"9", BinaryStringEncoding::Utf8);
 					WriteBufferToNordicUARTAsync(writeBuffer);
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-			}));
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
 
-			completed = true;
+					completed = true;
 
-		}),
+				}),
 			period,
 					TimerDestroyedHandler([&](ThreadPoolTimer source)
 						{
@@ -829,7 +829,7 @@ namespace winrt::PC_APP::implementation
 											//rootPage.NotifyUser(L"Disconnect to " + testDeviceName, NotifyType::StatusMessage);
 
 											resume_foreground(Dispatcher());
-											logWriter(L" : Disconnected", elapsedTime)
+											LogWriter(L" : Disconnected", elapsedTime);
 
 											actionStartTime = actionEndTime = 0;
 
@@ -856,14 +856,14 @@ namespace winrt::PC_APP::implementation
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-			}));
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
 
-			completed = true;
+					completed = true;
 
-		}),
+				}),
 			period,
 					TimerDestroyedHandler([&](ThreadPoolTimer source)
 						{
@@ -890,7 +890,11 @@ namespace winrt::PC_APP::implementation
 		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					// TODO reduce try count
+					retryCnt--;
+					if (retryCnt == 0)
+					{
+						// TODO action for timeout
+					}
 					Dispatcher().RunAsync(CoreDispatcherPriority::High,
 						DispatchedHandler([&]()
 							{
@@ -931,31 +935,31 @@ namespace winrt::PC_APP::implementation
 
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
-		{
-			TestAction();
+				{
+					TestAction();
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-			}));
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+							}));
 
-			completed = true;
+					completed = true;
 
-		}),
+				}),
 			period,
-			TimerDestroyedHandler([&](ThreadPoolTimer source)
-		{
+					TimerDestroyedHandler([&](ThreadPoolTimer source)
+						{
 
-			Dispatcher().RunAsync(CoreDispatcherPriority::High,
-				DispatchedHandler([&]()
-			{
-				if (completed)
-				{
-				}
-				else
-				{
-				}
-			}));
-		}));
+							Dispatcher().RunAsync(CoreDispatcherPriority::High,
+								DispatchedHandler([&]()
+									{
+										if (completed)
+										{
+										}
+										else
+										{
+										}
+									}));
+						}));
 	}
 }
