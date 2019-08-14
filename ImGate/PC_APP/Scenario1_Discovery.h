@@ -43,11 +43,13 @@ namespace winrt::PC_APP::implementation
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic registeredCharacteristic{ nullptr };
 		Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat presentationFormat{ nullptr };
 
-		Windows::System::Threading::ThreadPoolTimer messageTimeoutTimer = NULL;
-		int retryCnt;
+		hstring m_command;
 
 		bool isTest = false;
 		std::clock_t actionStartTime = 0, actionEndTime = 0;
+		Windows::System::Threading::ThreadPoolTimer messageTimeoutTimer = NULL;
+		int retryCnt;
+
 
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
@@ -70,16 +72,8 @@ namespace winrt::PC_APP::implementation
 		Windows::Foundation::IAsyncOperation<bool> WriteBufferToNordicUARTAsync(Windows::Storage::Streams::IBuffer buffer);
 		hstring FormatValueByPresentation(Windows::Storage::Streams::IBuffer const& buffer, Windows::Devices::Bluetooth::GenericAttributeProfile::GattPresentationFormat const& format);
 
-
-		void Lock();
-		void Unlock();
-		fire_and_forget Invert();
-		void SendConnectMessage();
-		void SendDisconnectMessage();
-		void SendTimeoutTestMessage();
-
 		fire_and_forget SendCommand(hstring command);
-
+		void SendCommand(hstring command, int delay_ms);
 		void StartTimeoutTimer();
 		void TestAction();
 		void RestartTestAction();
