@@ -580,11 +580,6 @@ namespace winrt::PC_APP::implementation
 				SendCommand(DISCONNECT_COMMAND, COMMAND_INTERVAL_MS);
 				RestartTestAction();
 			}
-			else if (newValue[1] == '3')
-			{
-				newValue = L"Test";
-				Unlock();
-			}
 		}
 
 		co_await resume_foreground(Dispatcher());
@@ -601,8 +596,8 @@ namespace winrt::PC_APP::implementation
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
-		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)" 
-			+ ((retryCnt == MAX_RETRY) ? L"" : to_hstring(MAX_RETRY - retryCnt)) + L"(" + to_hstring(cnt)+ L")";
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)"
+			+ ((retryCnt == MAX_RETRY) ? L"" : to_hstring(MAX_RETRY - retryCnt)) + L"(" + to_hstring(cnt) + L")";
 		CharacteristicLatestValue().Text(message);
 		hstring temp = Log().Text() + L"\n" + message;
 		Log().Text(temp);
@@ -754,9 +749,9 @@ namespace winrt::PC_APP::implementation
 								{
 									if (m_command == DISCONNECT_COMMAND)
 									{
-											disconnectCnt++;
-											resume_foreground(Dispatcher());
-											LogWriter(L" : Disconnected", elapsedTime, disconnectCnt);
+										disconnectCnt++;
+										resume_foreground(Dispatcher());
+										LogWriter(L" : Disconnected", elapsedTime, disconnectCnt);
 										actionStartTime = actionEndTime = 0;
 									}
 								}));
