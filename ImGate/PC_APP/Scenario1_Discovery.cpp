@@ -548,16 +548,22 @@ namespace winrt::PC_APP::implementation
 				newValue = L"Connected";
 				//Unlock();
 				SendTestMessage();
+				CntCo++;
+				CntV = CntCo;
 			}
 			else if (newValue[1] == '1')
 			{
 				newValue = L"Unlock";
 				Lock();
+				CntUn++;
+				CntV = CntUn;
 			}
 			else if (newValue[1] == '0')
 			{
 				newValue = L"Lock";
 				SendDisconnectMessage();
+				CntL++;
+				CntV = CntL;
 			}
 			else if (newValue[1] == '3')
 			{
@@ -568,6 +574,7 @@ namespace winrt::PC_APP::implementation
 
 		co_await resume_foreground(Dispatcher());
 		LogWriter(newValue, elapsedTime);
+		LogWriter(newValue, elapsedTime, CntV);
 
 		actionStartTime = actionEndTime = 0;
 	}
@@ -581,6 +588,7 @@ namespace winrt::PC_APP::implementation
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
 		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)";
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)" + L"(" + to_hstring(Cnt)+ L")";
 		CharacteristicLatestValue().Text(message);
 		hstring temp = Log().Text() + L"\n" + message;
 		Log().Text(temp);
@@ -832,8 +840,10 @@ namespace winrt::PC_APP::implementation
 										{
 											//rootPage.NotifyUser(L"Disconnect to " + testDeviceName, NotifyType::StatusMessage);
 
+											CntDis++;
 											resume_foreground(Dispatcher());
 											LogWriter(L" : Disconnected", elapsedTime);
+											LogWriter(L" : Disconnected", elapsedTime, CntDis);
 
 											actionStartTime = actionEndTime = 0;
 
@@ -841,6 +851,7 @@ namespace winrt::PC_APP::implementation
 											{
 												ActionButton().Content(box_value(L"Start"));
 												ActionButton().IsEnabled(true);
+												LogWriter(L"Stop");
 											}
 										}
 										else

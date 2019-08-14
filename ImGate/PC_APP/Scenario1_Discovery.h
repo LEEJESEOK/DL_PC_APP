@@ -48,6 +48,7 @@ namespace winrt::PC_APP::implementation
 
 		bool isTest = false;
 		std::clock_t actionStartTime = 0, actionEndTime = 0;
+		int CntV = 0, CntL = 0, CntUn = 0, CntCo = 0, CntDis = 0;
 
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
