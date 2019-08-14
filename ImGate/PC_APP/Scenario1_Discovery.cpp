@@ -840,6 +840,16 @@ namespace winrt::PC_APP::implementation
 			period);
 	}
 
+	fire_and_forget Scenario1_Discovery::SendCommand(hstring command)
+	{
+		auto lifetime = get_strong();
+
+		IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(command, BinaryStringEncoding::Utf8);
+		co_await WriteBufferToNordicUARTAsync(writeBuffer);
+		
+		co_return;
+	}
+
 	void Scenario1_Discovery::StartTimeoutTimer()
 	{
 		TimeSpan period(TIMEOUT_MS * 10000);

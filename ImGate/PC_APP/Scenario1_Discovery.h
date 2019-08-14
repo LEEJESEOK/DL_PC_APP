@@ -77,6 +77,9 @@ namespace winrt::PC_APP::implementation
 		void SendConnectMessage();
 		void SendDisconnectMessage();
 		void SendTimeoutTestMessage();
+
+		fire_and_forget SendCommand(hstring command);
+
 		void StartTimeoutTimer();
 		void TestAction();
 		void RestartTestAction();
