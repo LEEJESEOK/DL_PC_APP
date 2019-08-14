@@ -548,22 +548,22 @@ namespace winrt::PC_APP::implementation
 				newValue = L"Connected";
 				//Unlock();
 				SendTestMessage();
-				CntCo++;
-				CntV = CntCo;
+				connectCnt++;
+				valueCnt = connectCnt;
 			}
 			else if (newValue[1] == '1')
 			{
 				newValue = L"Unlock";
 				Lock();
-				CntUn++;
-				CntV = CntUn;
+				unlockCnt++;
+				valueCnt = unlockCnt;
 			}
 			else if (newValue[1] == '0')
 			{
 				newValue = L"Lock";
 				SendDisconnectMessage();
-				CntL++;
-				CntV = CntL;
+				lockCnt++;
+				valueCnt = lockCnt;
 			}
 			else if (newValue[1] == '3')
 			{
@@ -573,13 +573,12 @@ namespace winrt::PC_APP::implementation
 		}
 
 		co_await resume_foreground(Dispatcher());
-		LogWriter(newValue, elapsedTime);
-		LogWriter(newValue, elapsedTime, CntV);
+		LogWriter(newValue, elapsedTime, valueCnt);
 
 		actionStartTime = actionEndTime = 0;
 	}
 
-	void Scenario1_Discovery::LogWriter(hstring str, std::clock_t elapsedTime)
+	void Scenario1_Discovery::LogWriter(hstring str, std::clock_t elapsedTime, int cnt)
 	{
 		auto lifetime = get_strong();
 
@@ -587,8 +586,7 @@ namespace winrt::PC_APP::implementation
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
-		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)";
-		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)" + L"(" + to_hstring(Cnt)+ L")";
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)" + L"(" + to_hstring(cnt)+ L")";
 		CharacteristicLatestValue().Text(message);
 		hstring temp = Log().Text() + L"\n" + message;
 		Log().Text(temp);
@@ -840,10 +838,9 @@ namespace winrt::PC_APP::implementation
 										{
 											//rootPage.NotifyUser(L"Disconnect to " + testDeviceName, NotifyType::StatusMessage);
 
-											CntDis++;
+											disconnectCnt++;
 											resume_foreground(Dispatcher());
-											LogWriter(L" : Disconnected", elapsedTime);
-											LogWriter(L" : Disconnected", elapsedTime, CntDis);
+											LogWriter(L" : Disconnected", elapsedTime, disconnectCnt);
 
 											actionStartTime = actionEndTime = 0;
 

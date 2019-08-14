@@ -48,7 +48,7 @@ namespace winrt::PC_APP::implementation
 
 		bool isTest = false;
 		std::clock_t actionStartTime = 0, actionEndTime = 0;
-		int CntV = 0, CntL = 0, CntUn = 0, CntCo = 0, CntDis = 0;
+		int valueCnt = 0, lockCnt = 0, unlockCnt = 0, connectCnt = 0, disconnectCnt = 0;
 
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
@@ -82,7 +82,7 @@ namespace winrt::PC_APP::implementation
 		void TestAction();
 		void RestartTestAction();
 
-		void LogWriter(hstring str, std::clock_t elapsedTime);
+		void LogWriter(hstring str, std::clock_t elapsedTime, int cnt);
 		void LogWriter(hstring str);
 	};
 }
