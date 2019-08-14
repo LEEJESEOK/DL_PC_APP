@@ -29,6 +29,13 @@ namespace
 	const int TIMEOUT_MS = 10000;
 	const int MAX_RETRY = 3;
 
+	const hstring LOCK_COMMAND = L"0";
+	const hstring UNLOCK_COMMAND = L"1";
+	const hstring INVERT_COMMAND = L"2";
+	const hstring CONNECTED_MESSAGE = L"8";
+	const hstring DISCONNECT_COMMAND = L"9";
+	const hstring TEST_COMMAND = L"3";
+
 	// Utility function to convert a string to an int32_t and detect bad input
 	bool TryParseInt(const wchar_t* str, int32_t& result)
 	{
