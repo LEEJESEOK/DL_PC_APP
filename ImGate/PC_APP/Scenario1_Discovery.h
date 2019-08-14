@@ -50,6 +50,7 @@ namespace winrt::PC_APP::implementation
 		Windows::System::Threading::ThreadPoolTimer messageTimeoutTimer = NULL;
 		int retryCnt;
 
+		int valueCnt = 0, lockCnt = 0, unlockCnt = 0, connectCnt = 0, disconnectCnt = 0;
 
 		//scenario1 - enumeration
 		void StartBleDeviceWatcher();
@@ -78,7 +79,7 @@ namespace winrt::PC_APP::implementation
 		void TestAction();
 		void RestartTestAction();
 
-		void LogWriter(hstring str, std::clock_t elapsedTime);
+		void LogWriter(hstring str, std::clock_t elapsedTime, int cnt);
 		void LogWriter(hstring str);
 	};
 }
