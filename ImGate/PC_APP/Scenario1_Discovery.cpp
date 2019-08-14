@@ -28,7 +28,7 @@ namespace
 	const hstring testDeviceName = L"Nordic_test";
 
 	const int TEST_RESTART_INTERVAL_MS = 15000;
-	const int COMMAND_INTERVAL_MS = 3000;
+	const int COMMAND_INTERVAL_MS = 1500;
 
 	const int TIMEOUT_MS = 10000;
 	const int MAX_RETRY = 3;
