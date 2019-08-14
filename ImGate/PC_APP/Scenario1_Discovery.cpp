@@ -26,7 +26,7 @@ using namespace Windows::System::Threading;
 namespace
 {
 	const hstring testDeviceName = L"Nordic_test";
-	const int TIMEOUT_MS = 5000;
+	const int TIMEOUT_MS = 10000;
 	const int MAX_RETRY = 3;
 
 	// Utility function to convert a string to an int32_t and detect bad input
@@ -371,7 +371,7 @@ namespace winrt::PC_APP::implementation
 		RemoveValueChangedHandler();
 
 		co_await resume_foreground(Dispatcher());
-		LogWriter(L" : Try to connect to " + testDeviceName);
+		LogWriter(L"Try to connect to " + testDeviceName);
 
 		//connect
 		if (!co_await ClearBluetoothLEDeviceAsync())
@@ -547,7 +547,7 @@ namespace winrt::PC_APP::implementation
 			{
 				newValue = L"Connected";
 				//Unlock();
-				SendTestMessage();
+				SendTimeoutTestMessage();
 			}
 			else if (newValue[1] == '1')
 			{
@@ -556,8 +556,11 @@ namespace winrt::PC_APP::implementation
 			}
 			else if (newValue[1] == '0')
 			{
+				messageTimeoutTimer.Cancel();
+
 				newValue = L"Lock";
 				SendDisconnectMessage();
+				RestartTestAction();
 			}
 			else if (newValue[1] == '3')
 			{
@@ -580,7 +583,7 @@ namespace winrt::PC_APP::implementation
 		std::time_t now = clock::to_time_t(clock::now());
 		char buffer[26];
 		ctime_s(buffer, ARRAYSIZE(buffer), &now);
-		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)";
+		hstring message = L"Value at " + to_hstring(buffer) + L" : " + str + L"(" + to_hstring(elapsedTime) + L"ms)" + ((retryCnt == MAX_RETRY) ? L"" : to_hstring(MAX_RETRY - retryCnt));
 		CharacteristicLatestValue().Text(message);
 		hstring temp = Log().Text() + L"\n" + message;
 		Log().Text(temp);
@@ -721,21 +724,7 @@ namespace winrt::PC_APP::implementation
 					completed = true;
 
 				}),
-			period,
-					TimerDestroyedHandler([&](ThreadPoolTimer source)
-						{
-
-							Dispatcher().RunAsync(CoreDispatcherPriority::High,
-								DispatchedHandler([&]()
-									{
-										if (completed)
-										{
-										}
-										else
-										{
-										}
-									}));
-						}));
+			period);
 	}
 
 	void Scenario1_Discovery::Unlock()
@@ -760,21 +749,7 @@ namespace winrt::PC_APP::implementation
 					completed = true;
 
 				}),
-			period,
-					TimerDestroyedHandler([&](ThreadPoolTimer source)
-						{
-
-							Dispatcher().RunAsync(CoreDispatcherPriority::High,
-								DispatchedHandler([&]()
-									{
-										if (completed)
-										{
-										}
-										else
-										{
-										}
-									}));
-						}));
+			period);
 	}
 
 	fire_and_forget Scenario1_Discovery::Invert()
@@ -819,11 +794,7 @@ namespace winrt::PC_APP::implementation
 							ClearBluetoothLEDeviceAsync();
 
 							actionEndTime = std::clock();
-
 							std::clock_t elapsedTime = actionEndTime - actionStartTime;
-
-							if (isTest)
-								RestartTestAction();
 
 							Dispatcher().RunAsync(CoreDispatcherPriority::High,
 								DispatchedHandler([&]()
@@ -836,12 +807,6 @@ namespace winrt::PC_APP::implementation
 											LogWriter(L" : Disconnected", elapsedTime);
 
 											actionStartTime = actionEndTime = 0;
-
-											if (!isTest)
-											{
-												ActionButton().Content(box_value(L"Start"));
-												ActionButton().IsEnabled(true);
-											}
 										}
 										else
 										{
@@ -850,20 +815,16 @@ namespace winrt::PC_APP::implementation
 						}));
 	}
 
-	void Scenario1_Discovery::SendTestMessage()
+	void Scenario1_Discovery::SendTimeoutTestMessage()
 	{
 		TimeSpan period(3000 * 10000);
 
-		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
+		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					if (retryCnt != 0)
-					{
-						IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"3", BinaryStringEncoding::Utf8);
-						WriteBufferToNordicUARTAsync(writeBuffer);
-					}
-					else
-						messageTimeoutTimer.Cancel();
+					IBuffer writeBuffer = CryptographicBuffer::ConvertStringToBinary(L"3", BinaryStringEncoding::Utf8);
+					WriteBufferToNordicUARTAsync(writeBuffer);
+
 					Dispatcher().RunAsync(CoreDispatcherPriority::High,
 						DispatchedHandler([&]()
 							{
@@ -876,32 +837,36 @@ namespace winrt::PC_APP::implementation
 	{
 		TimeSpan period(TIMEOUT_MS * 10000);
 
-		if (retryCnt != 0)
-			messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
-				TimerElapsedHandler([&](ThreadPoolTimer source)
-					{
-						retryCnt--;
-						if (retryCnt == 0)
-						{
-							// TODO action for MAX_RETRY
-						}
+		messageTimeoutTimer = ThreadPoolTimer::CreateTimer(
+			TimerElapsedHandler([&](ThreadPoolTimer source)
+				{
+					Dispatcher().RunAsync(CoreDispatcherPriority::High,
+						DispatchedHandler([&]()
+							{
+								if (retryCnt == 0) {
+									LogWriter(L"Timeout EVENT");
+								}
+								else {
+									LogWriter(L"Generate Timeout / remain(" + to_hstring(MAX_RETRY - retryCnt) + L")");
+								}
+							}));
 
+					retryCnt--;
+
+					if (retryCnt == 0)
+					{
+						// TODO action for MAX_RETRY
+					}
+					else
+					{
 						//TODO restart action
 						// restart
 						StartTimeoutTimer();
-						SendTestMessage();
+						SendTimeoutTestMessage();
+					}
 
-
-						Dispatcher().RunAsync(CoreDispatcherPriority::High,
-							DispatchedHandler([&]()
-								{
-									if (retryCnt == 0) {
-										LogWriter(L"Timeout EVENT");
-									}
-									LogWriter(L"Generate Timeout : " + to_hstring(retryCnt));
-								}));
-					}),
-				period);
+				}),
+			period);
 	}
 
 	void Scenario1_Discovery::TestAction()
@@ -914,35 +879,22 @@ namespace winrt::PC_APP::implementation
 	{
 		TimeSpan period(15000 * 10000);
 
-		bool completed = false;
-
 		ThreadPoolTimer DelayTimer = ThreadPoolTimer::CreateTimer(
 			TimerElapsedHandler([&](ThreadPoolTimer source)
 				{
-					TestAction();
+					if (isTest)
+						TestAction();
 
 					Dispatcher().RunAsync(CoreDispatcherPriority::High,
 						DispatchedHandler([&]()
 							{
+								if (!isTest)
+								{
+									ActionButton().Content(box_value(L"Start"));
+									ActionButton().IsEnabled(true);
+								}
 							}));
-
-					completed = true;
-
 				}),
-			period,
-					TimerDestroyedHandler([&](ThreadPoolTimer source)
-						{
-
-							Dispatcher().RunAsync(CoreDispatcherPriority::High,
-								DispatchedHandler([&]()
-									{
-										if (completed)
-										{
-										}
-										else
-										{
-										}
-									}));
-						}));
+			period);
 	}
 }

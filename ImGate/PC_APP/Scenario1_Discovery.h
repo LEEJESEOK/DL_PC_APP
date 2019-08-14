@@ -76,7 +76,7 @@ namespace winrt::PC_APP::implementation
 		fire_and_forget Invert();
 		void SendConnectMessage();
 		void SendDisconnectMessage();
-		void SendTestMessage();
+		void SendTimeoutTestMessage();
 		void StartTimeoutTimer();
 		void TestAction();
 		void RestartTestAction();
